@@ -1,0 +1,2 @@
+# EpiLog
+Simple Logging Manager
