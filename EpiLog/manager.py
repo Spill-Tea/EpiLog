@@ -91,7 +91,7 @@ class EpiLog:
         """Sets Logging Format"""
         if value is None:
             value = logging.Formatter(
-                "%(asctime)s | %(name)s | %(levelname)s | %(module)s.%(func)s:%(lineno)d | %(message)s"
+                "%(asctime)s | %(name)s | %(levelname)s | %(module)s.%(funcName)s:%(lineno)d | %(message)s"
             )
 
         if not issubclass(value.__class__, logging.Formatter):
