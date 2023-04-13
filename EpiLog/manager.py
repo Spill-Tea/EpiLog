@@ -25,7 +25,7 @@
 """
 # Python Dependencies
 import logging
-from typing import Optional, Union
+from typing import Optional
 
 
 def _check_level(level: int) -> bool:
@@ -107,7 +107,7 @@ class EpiLog:
         return self._stream
 
     @stream.setter
-    def stream(self, value: Optional[Union[logging.Filterer, logging.Handler]]):
+    def stream(self, value: Optional[logging.Handler]):
         """Replaces Logging Handler Streams."""
         if value is None:
             value = logging.StreamHandler()
