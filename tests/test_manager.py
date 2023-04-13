@@ -2,9 +2,9 @@
     EpiLog/tests/test_manager.py
 
 """
+import logging
 import pytest
 from io import StringIO
-from logging import StreamHandler
 from EpiLog.manager import EpiLog
 
 
@@ -31,7 +31,7 @@ def test_logging():
 def test_stream():
     stream = StringIO()
 
-    handler = StreamHandler(stream)
+    handler = logging.StreamHandler(stream)
     manager = EpiLog(stream=handler)
     log = manager.get_logger("test")
     message = "You are blind to reality and for that I am most proud"
@@ -41,3 +41,27 @@ def test_stream():
     output = stream.read()
 
     assert message in output, "Message not Found in output stream after logging"
+
+
+@pytest.mark.parametrize("level", [
+    logging.NOTSET,
+    logging.DEBUG,
+    logging.INFO,
+    logging.WARN,
+    logging.ERROR,
+    logging.CRITICAL,
+    pytest.param(-1, marks=pytest.mark.xfail(raises=ValueError))
+])
+def test_levels(level):
+    manager = EpiLog(level=level)
+    assert manager.level == level
+
+
+@pytest.mark.parametrize("handler", [
+    logging.FileHandler("test.log"),
+    logging.StreamHandler(),
+    pytest.param("handler", marks=pytest.mark.xfail(raises=TypeError))
+])
+def test_handlers(handler):
+    manager = EpiLog(stream=handler)
+    assert manager.stream == handler
