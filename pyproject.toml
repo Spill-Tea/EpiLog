@@ -13,7 +13,7 @@ maintainers = [
 description = "Simple No-Frills Logging Manager"
 license = {file = "LICENSE"}
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.7"
 keywords = ["logging manager", "Benchmark"]
 classifiers = [
     "Programming Language :: Python :: 3",
