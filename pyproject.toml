@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=58.1.0"]
+requires = ["setuptools>=67.6.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -12,20 +12,24 @@ maintainers = [
 ]
 description = "Simple No-Frills Logging Manager"
 license = {file = "LICENSE"}
-readme = "README.md"
 requires-python = ">=3.7"
-keywords = ["logging manager", "Benchmark"]
+keywords = ["logging", "benchmark"]
 classifiers = [
     "Programming Language :: Python :: 3",
 ]
-dependencies = []
-dynamic = ["version"]
+dynamic = ["version", "readme", "dependencies"]
 
 [project.urls]
 homepage = "https://github.com/Spill-Tea/EpiLog"
+issues = "https://github.com/Spill-Tea/EpiLog/issues"
 
 [tool.setuptools.packages.find]
 where = ["EpiLog"]  # list of folders that contain the packages (["."] by default)
+
+[tool.setuptools.dynamic]
+version = {attr = "__version__"}
+readme = {file = ["README.md"], content-type = "text/markdown"}
+dependencies = {file = ["requirements.txt"]}
 
 [project.optional-dependencies]
 dev = ["pytest", "flake8", "pdoc", "pytest-cov", "wheel"]
