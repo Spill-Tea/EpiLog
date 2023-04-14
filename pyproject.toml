@@ -23,8 +23,8 @@ dynamic = ["version", "readme", "dependencies"]
 homepage = "https://github.com/Spill-Tea/EpiLog"
 issues = "https://github.com/Spill-Tea/EpiLog/issues"
 
-[tool.setuptools.packages.find]
-where = ["EpiLog"]  # list of folders that contain the packages (["."] by default)
+[tool.setuptools]
+package-dir = {"" = "EpiLog"}
 
 [tool.setuptools.dynamic]
 version = {attr = "__version__"}
