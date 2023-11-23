@@ -51,7 +51,7 @@ def test_level_change():
     manager = EpiLog(level=logging.INFO, stream=handler)
     log = manager.get_logger("test")
 
-    message = "You are blind to reality and for that I am most proud"
+    message = "I would say that he's blessedly unburdened with the complications of a university education."
     log.debug(message)
     stream.seek(0)
     output = stream.read()
