@@ -2,6 +2,7 @@
     EpiLog/tests/test_manager.py
 
 """
+import os
 import logging
 import pytest
 from io import StringIO
@@ -89,4 +90,10 @@ def test_levels(level):
 ])
 def test_handlers(handler):
     manager = EpiLog(stream=handler)
+
+    # Cleanup by removing file created by file handler
+    if isinstance(handler, logging.FileHandler):
+        os.remove(handler.baseFilename)
+
     assert manager.stream == handler
+
