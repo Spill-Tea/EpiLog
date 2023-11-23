@@ -69,6 +69,34 @@ def test_level_change():
     assert message in output, "Message not Found in output stream after logging"
 
 
+def test_format_change():
+    stream = StringIO()
+    handler = logging.StreamHandler(stream)
+    manager = EpiLog(level=logging.INFO, stream=handler)
+    log = manager.get_logger("test")
+
+    # Modify Formatter
+    manager.formatter = logging.Formatter("%(levelname)s | %(message)s")
+    message = "I have no idea why all of this is happening or how to control it."
+    log.info(message)
+
+    stream.seek(0)
+    output = stream.read()
+    stream.close()
+
+    assert f"INFO | {message}\n" == output
+
+
+@pytest.mark.parametrize("f", [
+    None,
+    pytest.param("Failure", marks=pytest.mark.xfail(raises=TypeError)),
+    logging.Formatter("%(name)s | %(levelname)s | %(message)s"),
+])
+def test_format(f):
+    manager = EpiLog(formatter=f)
+    manager.formatter = f
+
+
 @pytest.mark.parametrize("level", [
     logging.NOTSET,
     logging.DEBUG,

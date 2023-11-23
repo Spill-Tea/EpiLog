@@ -107,7 +107,6 @@ class EpiLog:
         self._formatter = value
         self.stream.setFormatter(self.formatter)
         for log in self.loggers.values():
-            log.setFormatter(self.formatter)
             for handle in log.handlers:
                 handle.setFormatter(self.formatter)
 
