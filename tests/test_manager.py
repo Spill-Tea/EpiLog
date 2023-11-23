@@ -39,6 +39,31 @@ def test_stream():
 
     stream.seek(0)
     output = stream.read()
+    stream.close()
+
+    assert message in output, "Message not Found in output stream after logging"
+
+
+def test_level_change():
+    stream = StringIO()
+
+    handler = logging.StreamHandler(stream)
+    manager = EpiLog(level=logging.INFO, stream=handler)
+    log = manager.get_logger("test")
+
+    message = "You are blind to reality and for that I am most proud"
+    log.debug(message)
+    stream.seek(0)
+    output = stream.read()
+    assert message not in output, "Message should not have been Received"
+
+    # Then repeat after Changing level
+    manager.level = logging.DEBUG
+    log.debug(message)
+
+    stream.seek(0)
+    output = stream.read()
+    stream.close()
 
     assert message in output, "Message not Found in output stream after logging"
 
