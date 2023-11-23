@@ -66,6 +66,9 @@ class EpiLog:
         self.level = level
         self.formatter = formatter
 
+    def __getitem__(self, item):
+        return self.loggers[item]
+
     @property
     def level(self) -> int:
         """Logging Level"""
@@ -79,7 +82,11 @@ class EpiLog:
 
         self._level = value
         self.stream.setLevel(self.level)
-        [log.setLevel(self.level) for log in self.loggers.values()]
+        for log in self.loggers.values():
+            log.setLevel(self.level)
+            # Update the streams to reflect current level
+            for handle in log.handlers:
+                handle.setLevel(self.level)
 
     @property
     def formatter(self) -> logging.Formatter:
@@ -99,7 +106,10 @@ class EpiLog:
 
         self._formatter = value
         self.stream.setFormatter(self.formatter)
-        [log.setFormatter(self.formatter) for log in self.loggers.values()]
+        for log in self.loggers.values():
+            log.setFormatter(self.formatter)
+            for handle in log.handlers:
+                handle.setFormatter(self.formatter)
 
     @property
     def stream(self) -> logging.Handler:
@@ -115,9 +125,14 @@ class EpiLog:
         if not issubclass(value.__class__, (logging.Filterer, logging.Handler)):
             raise TypeError(f"Unsupported Stream Handler: {value.__class__}")
 
-        [log.removeHandler(self.stream) for log in self.loggers.values()]
-        self._stream = value
-        [log.addHandler(self.stream) for log in self.loggers.values()]
+        if hasattr(self, "_stream"):
+            previous = self._stream
+            self._stream = value
+            for log in self.loggers.values():
+                log.removeHandler(previous)
+                log.addHandler(self.stream)
+        else:
+            self._stream = value
 
     def get_logger(self, name: str) -> logging.Logger:
         """Initializes a new logger."""
