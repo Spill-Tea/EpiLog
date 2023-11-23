@@ -87,6 +87,40 @@ def test_format_change():
     assert f"INFO | {message}\n" == output
 
 
+def test_stream_change():
+    stream_a = StringIO()
+    stream_b = StringIO()
+    handler_a = logging.StreamHandler(stream_a)
+    handler_b = logging.StreamHandler(stream_b)
+
+    manager = EpiLog(
+        level=logging.INFO,
+        stream=handler_a,
+        formatter=logging.Formatter("%(levelname)s | %(message)s")
+    )
+    log = manager.get_logger("test")
+
+    # Modify Stream
+    manager.stream = handler_b
+    assert manager.stream == handler_b
+
+    message = "You humans have so many emotions! You only need two: anger and confusion!"
+    expected = f"INFO | {message}\n"
+    log.info(message)
+
+    # Test first stream
+    stream_a.seek(0)
+    output_a = stream_a.read()
+    stream_a.close()
+    assert output_a != expected
+
+    # Test Second, Expected stream
+    stream_b.seek(0)
+    output_b = stream_b.read()
+    stream_b.close()
+    assert output_b == expected
+
+
 @pytest.mark.parametrize("f", [
     None,
     pytest.param("Failure", marks=pytest.mark.xfail(raises=TypeError)),

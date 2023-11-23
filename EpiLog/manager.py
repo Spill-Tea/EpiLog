@@ -126,6 +126,8 @@ class EpiLog:
 
         if hasattr(self, "_stream"):
             previous = self._stream
+            value.setFormatter(self.formatter)
+            value.setLevel(self.level)
             self._stream = value
             for log in self.loggers.values():
                 log.removeHandler(previous)
