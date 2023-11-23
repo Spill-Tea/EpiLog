@@ -96,4 +96,3 @@ def test_handlers(handler):
         os.remove(handler.baseFilename)
 
     assert manager.stream == handler
-
