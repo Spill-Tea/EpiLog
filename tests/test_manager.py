@@ -2,6 +2,7 @@
     EpiLog/tests/test_manager.py
 
 """
+import os
 import logging
 import pytest
 from io import StringIO
@@ -39,8 +40,95 @@ def test_stream():
 
     stream.seek(0)
     output = stream.read()
+    stream.close()
 
     assert message in output, "Message not Found in output stream after logging"
+
+
+def test_level_change():
+    stream = StringIO()
+
+    handler = logging.StreamHandler(stream)
+    manager = EpiLog(level=logging.INFO, stream=handler)
+    log = manager.get_logger("test")
+
+    message = "I would say that he's blessedly unburdened with the complications of a university education."
+    log.debug(message)
+    stream.seek(0)
+    output = stream.read()
+    assert message not in output, "Message should not have been Received"
+
+    # Then repeat after Changing level
+    manager.level = logging.DEBUG
+    log.debug(message)
+
+    stream.seek(0)
+    output = stream.read()
+    stream.close()
+
+    assert message in output, "Message not Found in output stream after logging"
+
+
+def test_format_change():
+    stream = StringIO()
+    handler = logging.StreamHandler(stream)
+    manager = EpiLog(level=logging.INFO, stream=handler)
+    log = manager.get_logger("test")
+
+    # Modify Formatter
+    manager.formatter = logging.Formatter("%(levelname)s | %(message)s")
+    message = "I have no idea why all of this is happening or how to control it."
+    log.info(message)
+
+    stream.seek(0)
+    output = stream.read()
+    stream.close()
+
+    assert f"INFO | {message}\n" == output
+
+
+def test_stream_change():
+    stream_a = StringIO()
+    stream_b = StringIO()
+    handler_a = logging.StreamHandler(stream_a)
+    handler_b = logging.StreamHandler(stream_b)
+
+    manager = EpiLog(
+        level=logging.INFO,
+        stream=handler_a,
+        formatter=logging.Formatter("%(levelname)s | %(message)s")
+    )
+    log = manager.get_logger("test")
+
+    # Modify Stream
+    manager.stream = handler_b
+    assert manager.stream == handler_b
+
+    message = "You humans have so many emotions! You only need two: anger and confusion!"
+    expected = f"INFO | {message}\n"
+    log.info(message)
+
+    # Test first stream
+    stream_a.seek(0)
+    output_a = stream_a.read()
+    stream_a.close()
+    assert output_a != expected
+
+    # Test Second, Expected stream
+    stream_b.seek(0)
+    output_b = stream_b.read()
+    stream_b.close()
+    assert output_b == expected
+
+
+@pytest.mark.parametrize("f", [
+    None,
+    pytest.param("Failure", marks=pytest.mark.xfail(raises=TypeError)),
+    logging.Formatter("%(name)s | %(levelname)s | %(message)s"),
+])
+def test_format(f):
+    manager = EpiLog(formatter=f)
+    manager.formatter = f
 
 
 @pytest.mark.parametrize("level", [
@@ -64,4 +152,9 @@ def test_levels(level):
 ])
 def test_handlers(handler):
     manager = EpiLog(stream=handler)
+
+    # Cleanup by removing file created by file handler
+    if isinstance(handler, logging.FileHandler):
+        os.remove(handler.baseFilename)
+
     assert manager.stream == handler
