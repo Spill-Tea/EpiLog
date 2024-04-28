@@ -1,22 +1,22 @@
-"""
-    EpiLog/tests/test_bench.py
+"""Test Expected Behavior of the EpiLog Benchmark Module."""
 
-"""
 from io import StringIO
 from logging import StreamHandler
-from EpiLog.manager import EpiLog
+
 from EpiLog.benchmark import BenchMark
+from EpiLog.manager import EpiLog
 
 
-def test_mark():
+def test_empty_benchmark():
+    """Tests that an Empty Benchmark context manager class correctly logs message."""
     stream = StringIO()
 
     handler = StreamHandler(stream)
     manager = EpiLog(stream=handler)
     log = manager.get_logger("test")
-    msg = "I’m positively bedeviled with meetings et cetera"
+    msg = "I'm positively bedeviled with meetings et cetera"
 
-    with BenchMark(log, msg) as b:
+    with BenchMark(log, msg):
         ...
 
     stream.seek(0)

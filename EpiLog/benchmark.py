@@ -19,10 +19,8 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""
-    EpiLog/benchmark.py
+"""Simple context manager to log procedure operation duration, for benchmark."""
 
-"""
 # Python Dependencies
 import logging
 from time import perf_counter_ns
@@ -30,9 +28,12 @@ from time import perf_counter_ns
 
 class BenchMark:
     """Context Manager to Benchmark any process through a log."""
+
     __slots__ = ("enabled", "log", "description", "t0")
 
-    def __init__(self, log: logging.Logger, description: str, level: int = logging.INFO):
+    def __init__(
+        self, log: logging.Logger, description: str, level: int = logging.INFO
+    ):
         self.enabled = log.isEnabledFor(level)
         self.log = log
         self.description = description

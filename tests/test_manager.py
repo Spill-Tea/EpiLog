@@ -1,19 +1,17 @@
-"""
-    EpiLog/tests/test_manager.py
+"""Unit tests to examine the Expected Behavior of the EpiLog Logging Manager."""
 
-"""
-import os
 import logging
-import pytest
+import os
 from io import StringIO
+
+import pytest
+
 from EpiLog.manager import EpiLog
 
 
-@pytest.mark.parametrize("names", [
-    ("a", "b", "c"),
-    ("b", "c", "d", "e")
-])
+@pytest.mark.parametrize("names", [("a", "b", "c"), ("b", "c", "d", "e")])
 def test_get_logger(names):
+    """Tests that we correctly construct a named logger."""
     manager = EpiLog()
     assert len(manager.loggers) == 0
 
@@ -24,12 +22,14 @@ def test_get_logger(names):
 
 
 def test_logging():
+    """Makes certain no errors are raised while logging."""
     manager = EpiLog()
     log = manager.get_logger("test")
     log.info("Bob boop beep")
 
 
 def test_stream():
+    """Tests that the message output by logging is actually written to stream."""
     stream = StringIO()
 
     handler = logging.StreamHandler(stream)
@@ -46,13 +46,17 @@ def test_stream():
 
 
 def test_level_change():
+    """Tests that modifying the Logging Level accurately filters log output."""
     stream = StringIO()
 
     handler = logging.StreamHandler(stream)
     manager = EpiLog(level=logging.INFO, stream=handler)
     log = manager.get_logger("test")
 
-    message = "I would say that he's blessedly unburdened with the complications of a university education."
+    message = (
+        "I would say that he's blessedly unburdened with the complications of a"
+        " university education."
+    )
     log.debug(message)
     stream.seek(0)
     output = stream.read()
@@ -70,6 +74,7 @@ def test_level_change():
 
 
 def test_format_change():
+    """Tests that modifying the Logging Format accurately Modifies log output Format."""
     stream = StringIO()
     handler = logging.StreamHandler(stream)
     manager = EpiLog(level=logging.INFO, stream=handler)
@@ -88,6 +93,7 @@ def test_format_change():
 
 
 def test_stream_change():
+    """Tests that modifying the Logging Stream writes to the correct Stream."""
     stream_a = StringIO()
     stream_b = StringIO()
     handler_a = logging.StreamHandler(stream_a)
@@ -96,7 +102,7 @@ def test_stream_change():
     manager = EpiLog(
         level=logging.INFO,
         stream=handler_a,
-        formatter=logging.Formatter("%(levelname)s | %(message)s")
+        formatter=logging.Formatter("%(levelname)s | %(message)s"),
     )
     log = manager.get_logger("test")
 
@@ -104,7 +110,9 @@ def test_stream_change():
     manager.stream = handler_b
     assert manager.stream == handler_b
 
-    message = "You humans have so many emotions! You only need two: anger and confusion!"
+    message = (
+        "You humans have so many emotions! You only need two: anger and confusion!"
+    )
     expected = f"INFO | {message}\n"
     log.info(message)
 
@@ -121,36 +129,48 @@ def test_stream_change():
     assert output_b == expected
 
 
-@pytest.mark.parametrize("f", [
-    None,
-    pytest.param("Failure", marks=pytest.mark.xfail(raises=TypeError)),
-    logging.Formatter("%(name)s | %(levelname)s | %(message)s"),
-])
+@pytest.mark.parametrize(
+    "f",
+    [
+        None,
+        pytest.param("Failure", marks=pytest.mark.xfail(raises=TypeError)),
+        logging.Formatter("%(name)s | %(levelname)s | %(message)s"),
+    ],
+)
 def test_format(f):
+    """Tests expected behaviors when instantiating with Formatters."""
     manager = EpiLog(formatter=f)
     manager.formatter = f
 
 
-@pytest.mark.parametrize("level", [
-    logging.NOTSET,
-    logging.DEBUG,
-    logging.INFO,
-    logging.WARN,
-    logging.ERROR,
-    logging.CRITICAL,
-    pytest.param(-1, marks=pytest.mark.xfail(raises=ValueError))
-])
+@pytest.mark.parametrize(
+    "level",
+    [
+        logging.NOTSET,
+        logging.DEBUG,
+        logging.INFO,
+        logging.WARN,
+        logging.ERROR,
+        logging.CRITICAL,
+        pytest.param(-1, marks=pytest.mark.xfail(raises=ValueError)),
+    ],
+)
 def test_levels(level):
+    """Tests Expected instantiation Behavior of EpiLog class with Logging Level."""
     manager = EpiLog(level=level)
     assert manager.level == level
 
 
-@pytest.mark.parametrize("handler", [
-    logging.FileHandler("test.log"),
-    logging.StreamHandler(),
-    pytest.param("handler", marks=pytest.mark.xfail(raises=TypeError))
-])
+@pytest.mark.parametrize(
+    "handler",
+    [
+        logging.FileHandler("test.log"),
+        logging.StreamHandler(),
+        pytest.param("handler", marks=pytest.mark.xfail(raises=TypeError)),
+    ],
+)
 def test_handlers(handler):
+    """Tests Expected instantiation Behavior of EpiLog class with stream."""
     manager = EpiLog(stream=handler)
 
     # Cleanup by removing file created by file handler
