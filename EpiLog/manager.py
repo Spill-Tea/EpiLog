@@ -40,14 +40,14 @@ defaultFormat = logging.Formatter(
 
 
 def _check_level(level: int) -> bool:
-    _levels = [
+    _levels = {
         logging.NOTSET,
         logging.DEBUG,
         logging.INFO,
         logging.WARN,
         logging.ERROR,
         logging.CRITICAL,
-    ]
+    }
 
     return level in _levels
 
@@ -58,8 +58,8 @@ class EpiLog:
     Args:
     ----
         level (int): Logging Level
-        stream (logging.Handler): Where to log
-        formatter (logging.Formatter): Format dictating How to Log
+        stream (logging.Handler): Where logs are written to
+        formatter (logging.Formatter): Dictates how to logs are formatted
 
     Notes:
     -----
@@ -78,7 +78,7 @@ class EpiLog:
         formatter: logging.Formatter = defaultFormat,
     ):
         self.loggers: Dict[str, logging.Logger] = {}
-        self.stream = stream  # noqa: PLE0237
+        self.stream = stream or logging.StreamHandler()  # noqa: PLE0237
         self.level = level  # noqa: PLE0237
         self.formatter = formatter  # noqa: PLE0237
 
@@ -139,7 +139,7 @@ class EpiLog:
         if not issubclass(value.__class__, (logging.Filterer, logging.Handler)):
             raise TypeError(f"Unsupported Stream Handler: {value.__class__}")
 
-        if hasattr(self, "_stream"):
+        elif hasattr(self, "_stream"):
             previous = self._stream
             value.setFormatter(self.formatter)
             value.setLevel(self.level)
@@ -147,6 +147,7 @@ class EpiLog:
             for log in self.loggers.values():
                 log.removeHandler(previous)
                 log.addHandler(self.stream)
+
         else:
             self._stream = value
 

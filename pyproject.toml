@@ -28,6 +28,9 @@ version = {attr = "EpiLog.__version__"}
 readme = {file = ["README.md"], content-type = "text/markdown"}
 dependencies = {file = ["requirements.txt"]}
 
+[tool.setuptools.package-data]
+"*" = ["py.typed", "*.pyi"]
+
 [project.optional-dependencies]
 dev = ["EpiLog[doc,test,lint,type]"]
 doc = ["pdoc"]
@@ -40,6 +43,7 @@ testpaths = ["tests"]
 addopts = "-n auto -rA --cov=EpiLog --cov-report term-missing --cov-fail-under=90"
 
 [tool.mypy]
+mypy_path = "EpiLog"
 warn_unused_ignores = true
 allow_redefinition = false
 force_uppercase_builtins = true
@@ -48,6 +52,7 @@ force_union_syntax = true
 [tool.ruff]
 line-length = 88
 indent-width = 4
+respect-gitignore = true
 
 [tool.ruff.lint]
 select = [
@@ -56,18 +61,18 @@ select = [
     "E",  # pycodestyle
     "F",  # pyflakes
     "I",  # isort
-    "PYI", # flake8-pyi
-    "UP", # pyupgrade
-    "RUF", # ruff
+    "PYI",  # flake8-pyi
+    "UP",  # pyupgrade
+    "RUF",  # ruff
     "W",  # pycodestyle
-    "PIE", # flake8-pie
-    "PGH004", # pygrep-hooks - Use specific rule codes when using noqa
-    "PLE", # pylint error
-    "PLW", # pylint warning
-    "PLR1714", # Consider merging multiple comparisons
+    "PIE",  # flake8-pie
+    "PGH004",  # pygrep-hooks - Use specific rule codes when using noqa
+    "PLE",  # pylint error
+    "PLW",  # pylint warning
+    "PLR1714",  # Consider merging multiple comparisons
 ]
 ignore = [
-    "D105", # undocumented-magic-method (D105)
+    "D105",  # undocumented-magic-method (D105)
     "D107",  # undocumented-public-init (D107)
     "D203",  # one-blank-line-before-class (D203)
     "D213",  # multi-line-summary-second-line (D213)
@@ -80,8 +85,7 @@ lines-after-imports = 2
 "__init__.py" = [
    "E402",  # Import Statement not at Top of File
    "F401",  # Unused Imports
-   ]
-
+]
 
 [tool.ruff.format]
 quote-style = "double"

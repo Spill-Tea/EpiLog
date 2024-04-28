@@ -4,15 +4,14 @@ from io import StringIO
 from logging import StreamHandler
 
 from EpiLog.benchmark import BenchMark
-from EpiLog.manager import EpiLog
 
 
-def test_empty_benchmark():
+def test_empty_benchmark(build_manager):
     """Tests that an Empty Benchmark context manager class correctly logs message."""
     stream = StringIO()
-
     handler = StreamHandler(stream)
-    manager = EpiLog(stream=handler)
+    manager = build_manager(stream=handler)
+
     log = manager.get_logger("test")
     msg = "I'm positively bedeviled with meetings et cetera"
 
@@ -24,3 +23,7 @@ def test_empty_benchmark():
 
     assert msg in output, "Message not Found in output stream after logging"
     assert "Traceback" not in output, "Error raised during use of context manager."
+
+
+# def test_enabled():
+#     ...
