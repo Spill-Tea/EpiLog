@@ -29,15 +29,16 @@ from time import perf_counter_ns
 class BenchMark:
     """Context Manager to Benchmark any process through a log."""
 
-    __slots__ = ("enabled", "log", "description", "t0")
+    __slots__ = ("level", "enabled", "log", "description", "t0")
 
     def __init__(
         self, log: logging.Logger, description: str, level: int = logging.INFO
     ):
-        self.enabled = log.isEnabledFor(level)
+        self.level = level
+        self.enabled = log.isEnabledFor(self.level)
         self.log = log
         self.description = description
-        self.t0 = None
+        self.t0 = 0
 
     def __enter__(self):
         if self.enabled:
@@ -47,11 +48,12 @@ class BenchMark:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is not None:
-            logging.error("Traceback...:\n", exc_info=(exc_type, exc_val, exc_tb))
+            self.log.error("Traceback...:\n", exc_info=(exc_type, exc_val, exc_tb))
+            return
 
-        if not self.enabled:
+        elif not self.enabled:
             return
 
         end = perf_counter_ns()
         elapsed = (end - self.t0) / 1_000_000
-        self.log.info("%s: %.4fms", self.description, elapsed)
+        self.log.log(self.level, "%s: (%.4fms)", self.description, elapsed)

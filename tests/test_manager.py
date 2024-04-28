@@ -129,6 +129,16 @@ def test_stream_change(build_manager):
     assert output_b == expected, "Expected message to be written to current stream."
 
 
+def test_stream_change_to_none(build_manager):
+    """Confirm that when attempts to set the stream to none go to default stream."""
+    manager = build_manager()
+    manager.stream = None
+    assert manager.stream is not None, "Expected Default Stream to kick in."
+    assert isinstance(
+        manager.stream, (logging.Handler, logging.Filterer)
+    ), "Unexpected stream type."
+
+
 @pytest.mark.parametrize(
     "f",
     [
@@ -179,3 +189,12 @@ def test_handlers(handler, build_manager):
         os.remove(handler.baseFilename)
 
     assert manager.stream == handler, "Expected Stream to reflect input."
+
+
+def test_get_log_by_name(build_manager):
+    """Tests get item dunder method works as expected."""
+    manager = build_manager()
+    name = "get_item"
+    log: logging.Logger = manager.get_logger(name)
+
+    assert manager[name] == log, "Expected to retrieve the same logger via get item."
