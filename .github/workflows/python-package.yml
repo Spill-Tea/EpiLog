@@ -34,4 +34,4 @@ jobs:
           pip install tox
 
       - name: Use Tox to Orchestrate Unit Testing Paradigm
-        run: tox -e py
+        run: tox -e py,type,lint
