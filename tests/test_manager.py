@@ -192,7 +192,7 @@ def test_handlers(handler, build_manager):
 
 
 def test_get_log_by_name(build_manager):
-    """Tests get item dunder method works as expected."""
+    """Tests the special dunder method __get_item__ works as expected."""
     manager = build_manager()
     name = "get_item"
     log: logging.Logger = manager.get_logger(name)

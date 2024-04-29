@@ -2,14 +2,16 @@
 
 import logging
 from io import StringIO
+from typing import Generator, Tuple
 
 import pytest
 
+from EpiLog import EpiLog
 from EpiLog.benchmark import BenchMark
 
 
 @pytest.fixture
-def construct(build_manager):
+def construct(build_manager) -> Generator[Tuple[StringIO, EpiLog], None, None]:
     """Construct EpiLog Log Manager with standard Fixings."""
     stream = StringIO()
     handler = logging.StreamHandler(stream)
