@@ -33,5 +33,13 @@ jobs:
           python -m pip install -U pip setuptools wheel
           pip install tox
 
-      - name: Use Tox to Orchestrate Unit Testing Paradigm
-        run: tox -e py,type,lint
+      - name: Pytest Unit Testing
+        run: tox -e py
+
+      - name: Code Linting & Formatting
+        if: always()
+        run: tox -e lint
+
+      - name: MyPy Static Type Check
+        if: always()
+        run: tox -e type
