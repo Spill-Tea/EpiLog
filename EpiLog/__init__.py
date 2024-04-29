@@ -21,4 +21,8 @@
 # SOFTWARE.
 """EpiLog Logging Manager Package."""
 
-__version__ = "1.0.0"
+from .benchmark import BenchMark
+from .manager import EpiLog
+
+
+__version__ = "1.1.0"

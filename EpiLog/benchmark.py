@@ -27,7 +27,20 @@ from time import perf_counter_ns
 
 
 class BenchMark:
-    """Context Manager to Benchmark any process through a log."""
+    """Context Manager to Benchmark any process through a log.
+
+    Args:
+    ----
+        log (logging.Logger):
+        description (str): Message used to describe actions performed during benchmark.
+        level (int): Logging Level
+
+    Attributes:
+    ----------
+        enabled (bool): If Benchmark level is compatible with log level to emit message.
+        t0 (int): Entry time to benchmark suite.
+
+    """
 
     __slots__ = ("level", "enabled", "log", "description", "t0")
 

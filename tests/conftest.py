@@ -22,7 +22,7 @@ def build_manager():
     """Construct an EpiLog Instance and Handles Tear down of creating new Loggers."""
     instance: EpiLog = None
 
-    def builder(*args, **kwargs):
+    def builder(*args, **kwargs) -> EpiLog:
         nonlocal instance
         instance = EpiLog(*args, **kwargs)
         return instance
