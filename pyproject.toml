@@ -47,7 +47,6 @@ mypy_path = "EpiLog"
 warn_unused_ignores = true
 allow_redefinition = false
 force_uppercase_builtins = true
-force_union_syntax = true
 
 [tool.ruff]
 line-length = 88

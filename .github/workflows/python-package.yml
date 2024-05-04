@@ -33,7 +33,7 @@ jobs:
           python -m pip install -U pip setuptools wheel
           pip install tox
 
-      - name: Pytest Unit Testing
+      - name: PyTest Unit Testing
         run: tox -e py
 
       - name: Code Linting & Formatting

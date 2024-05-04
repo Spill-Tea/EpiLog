@@ -7,7 +7,7 @@ from typing import Generator, Tuple
 import pytest
 
 from EpiLog import EpiLog
-from EpiLog.benchmark import BenchMark
+from EpiLog.benchmark import NS_UNITS, BenchMark, breakdown_units
 
 
 @pytest.fixture
@@ -75,3 +75,23 @@ def test_error(construct):
     output = stream.read()
     assert "ERROR" in output, "Expected Error Level Log Emitted"
     assert "Traceback" in output, "Expected Log message to include traceback info."
+
+
+@pytest.mark.parametrize(
+    ["value", "expected"],
+    [
+        (50, {"ns": 50}),
+        (1000, {"us": 1}),
+        (1_000_000, {"ms": 1}),
+        (5_050_000, {"ms": 5, "us": 50}),
+        (5_050_000, {"ms": 5, "us": 50}),
+        (1_005_050_000, {"s": 1, "ms": 5, "us": 50}),
+    ],
+)
+def test_breakdown(value, expected):
+    """Test Breakdown of ns into appropriate time bins."""
+    result = breakdown_units(value)
+    container = dict((i.unit, 0) for i in NS_UNITS)
+    container.update(expected)
+
+    assert result == container, "Expected Equal Output."

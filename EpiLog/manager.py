@@ -21,9 +21,9 @@
 # SOFTWARE.
 """Primary Logging Manager, EpiLog."""
 
-# Python Dependencies
+from __future__ import annotations
+
 import logging
-from typing import Dict, Optional
 
 
 defaultFormat = logging.Formatter(
@@ -67,17 +67,38 @@ class EpiLog:
         * Designed for local control of logging (i.e. Logging events from globally
             imported libraries are not captured)
 
+    Example:
+    -------
+        ``` python
+
+            import logging
+            from EpiLog import EpiLog
+
+            formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
+            manager = EpiLog(logging.DEBUG, formatter=formatter)
+            log = manager.get_log(__name__)  # A logger created using manager settings
+            log.debug("Logger Created")
+
+        ```
+
     """
 
     __slots__ = ("loggers", "_level", "_formatter", "_stream")
 
+    _level: int
+    _stream: logging.Handler
+    _formatter: logging.Formatter
+    loggers: dict[str, logging.Logger]
+
     def __init__(
         self,
         level: int = logging.INFO,
-        stream: Optional[logging.Handler] = None,
+        stream: logging.Handler | None = None,
         formatter: logging.Formatter = defaultFormat,
     ):
-        self.loggers: Dict[str, logging.Logger] = {}
+        self.loggers: dict[str, logging.Logger] = {}
+
+        # Use property setters to manage attributes
         self.stream = stream or logging.StreamHandler()  # noqa: PLE0237
         self.level = level  # noqa: PLE0237
         self.formatter = formatter  # noqa: PLE0237
@@ -111,7 +132,7 @@ class EpiLog:
         return self._formatter
 
     @formatter.setter
-    def formatter(self, value: Optional[logging.Formatter]):
+    def formatter(self, value: logging.Formatter | None):
         """Set Logging Format."""
         if value is None:
             value = defaultFormat
@@ -131,7 +152,7 @@ class EpiLog:
         return self._stream
 
     @stream.setter
-    def stream(self, value: Optional[logging.Handler]):
+    def stream(self, value: logging.Handler | None):
         """Replace Logging Handler Streams."""
         if value is None:
             value = logging.StreamHandler()

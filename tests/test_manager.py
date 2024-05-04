@@ -143,7 +143,6 @@ def test_stream_change_to_none(build_manager):
     "f",
     [
         None,
-        pytest.param("Failure", marks=pytest.mark.xfail(raises=TypeError)),
         logging.Formatter("%(name)s | %(levelname)s | %(message)s"),
     ],
 )
@@ -152,6 +151,12 @@ def test_format(f, build_manager):
     manager = build_manager(formatter=f)
     if f is not None:
         assert manager.formatter == f, "Expected Logging Format to reflect input."
+
+
+def test_format_error(build_manager):
+    """Test TypeError is raised when instantiating with invalid Formatters."""
+    with pytest.raises(TypeError):
+        build_manager(formatter="Failure")
 
 
 @pytest.mark.parametrize(
@@ -163,7 +168,6 @@ def test_format(f, build_manager):
         logging.WARN,
         logging.ERROR,
         logging.CRITICAL,
-        pytest.param(-1, marks=pytest.mark.xfail(raises=ValueError)),
     ],
 )
 def test_levels(level, build_manager):
@@ -172,12 +176,17 @@ def test_levels(level, build_manager):
     assert manager.level == level, "Expected Logging Level to be reflect input."
 
 
+def test_level_error(build_manager):
+    """Tests ValueError is raised Expected when instantiating invalid Logging Level."""
+    with pytest.raises(ValueError):
+        build_manager(level=-1)
+
+
 @pytest.mark.parametrize(
     "handler",
     [
         logging.FileHandler("test.log"),
         logging.StreamHandler(),
-        pytest.param("handler", marks=pytest.mark.xfail(raises=TypeError)),
     ],
 )
 def test_handlers(handler, build_manager):
@@ -189,6 +198,12 @@ def test_handlers(handler, build_manager):
         os.remove(handler.baseFilename)
 
     assert manager.stream == handler, "Expected Stream to reflect input."
+
+
+def test_handlers_error(build_manager):
+    """Tests TypeError is raised Expected when instantiating invalid stream."""
+    with pytest.raises(TypeError):
+        build_manager(stream="handler")
 
 
 def test_get_log_by_name(build_manager):
