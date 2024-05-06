@@ -28,10 +28,65 @@ version = {attr = "EpiLog.__version__"}
 readme = {file = ["README.md"], content-type = "text/markdown"}
 dependencies = {file = ["requirements.txt"]}
 
+[tool.setuptools.package-data]
+"*" = ["py.typed", "*.pyi"]
+
 [project.optional-dependencies]
-dev = ["pytest", "flake8", "pdoc", "pytest-cov", "wheel"]
-test = ["pytest", "flake8", "pytest-cov", "wheel"]
+dev = ["EpiLog[doc,test,lint,type]"]
+doc = ["pdoc"]
+test = ["pytest", "pytest-cov", "pytest-xdist"]
+lint = ["ruff"]
+type = ["mypy"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-rA --cov=EpiLog --cov-report term-missing --cov-fail-under=90"
+addopts = "-n auto -rA --cov=EpiLog --cov-report term-missing --cov-fail-under=90"
+
+[tool.mypy]
+mypy_path = "EpiLog"
+warn_unused_ignores = true
+allow_redefinition = false
+force_uppercase_builtins = true
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+respect-gitignore = true
+
+[tool.ruff.lint]
+select = [
+    "B",  # bugbear
+    "D",  # pydocstyle
+    "E",  # pycodestyle
+    "F",  # pyflakes
+    "I",  # isort
+    "PYI",  # flake8-pyi
+    "UP",  # pyupgrade
+    "RUF",  # ruff
+    "W",  # pycodestyle
+    "PIE",  # flake8-pie
+    "PGH004",  # pygrep-hooks - Use specific rule codes when using noqa
+    "PLE",  # pylint error
+    "PLW",  # pylint warning
+    "PLR1714",  # Consider merging multiple comparisons
+]
+ignore = [
+    "D105",  # undocumented-magic-method (D105)
+    "D107",  # undocumented-public-init (D107)
+    "D203",  # one-blank-line-before-class (D203)
+    "D213",  # multi-line-summary-second-line (D213)
+]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+   "E402",  # Import Statement not at Top of File
+   "F401",  # Unused Imports
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

@@ -19,59 +19,97 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""
-    EpiLog/manager.py
+"""Primary Logging Manager, EpiLog."""
 
-"""
-# Python Dependencies
+from __future__ import annotations
+
 import logging
-from typing import Optional
+
+
+defaultFormat = logging.Formatter(
+    " | ".join(
+        [
+            "%(asctime)s",
+            "%(name)s",
+            "%(levelname)s",
+            "%(module)s.%(funcName)s:%(lineno)d",
+            "%(message)s",
+        ]
+    )
+)
 
 
 def _check_level(level: int) -> bool:
-    _levels = [
+    _levels = {
         logging.NOTSET,
         logging.DEBUG,
         logging.INFO,
         logging.WARN,
         logging.ERROR,
-        logging.CRITICAL
-    ]
+        logging.CRITICAL,
+    }
 
     return level in _levels
 
 
 class EpiLog:
-    """Simple Log Manager designed to centralize Local Module or Task level logging control.
+    """Log Manager designed to centralize Local Module or Task level logging control.
 
     Args:
+    ----
         level (int): Logging Level
-        stream (logging.Handler): Where to log
-        formatter (logging.Formatter): Format dictating How to Log
+        stream (logging.Handler): Where logs are written to
+        formatter (logging.Formatter): Dictates how to logs are formatted
 
     Notes:
+    -----
         * Natively Supports only a single Stream per instantiated logger.
-        * Designed for local control of logging (i.e., Logging events from globally imported libraries are not captured)
+        * Designed for local control of logging (i.e. Logging events from globally
+            imported libraries are not captured)
+
+    Example:
+    -------
+        ``` python
+
+            import logging
+            from EpiLog import EpiLog
+
+            formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
+            manager = EpiLog(logging.DEBUG, formatter=formatter)
+            log = manager.get_log(__name__)  # A logger created using manager settings
+            log.debug("Logger Created")
+
+        ```
 
     """
+
     __slots__ = ("loggers", "_level", "_formatter", "_stream")
 
-    def __init__(self,
-                 level: int = logging.INFO,
-                 stream: Optional[logging.Handler] = None,
-                 formatter: Optional[logging.Formatter] = None,
-                 ):
-        self.loggers = {}
-        self.stream = stream
-        self.level = level
-        self.formatter = formatter
+    _level: int
+    _stream: logging.Handler
+    _formatter: logging.Formatter
+    loggers: dict[str, logging.Logger]
 
-    def __getitem__(self, item):
+    def __init__(
+        self,
+        level: int = logging.INFO,
+        stream: logging.Handler | None = None,
+        formatter: logging.Formatter = defaultFormat,
+    ):
+        self.loggers: dict[str, logging.Logger] = {}
+
+        # Use property setters to manage attributes
+        self.stream = stream or logging.StreamHandler()  # noqa: PLE0237
+        self.level = level  # noqa: PLE0237
+        self.formatter = formatter  # noqa: PLE0237
+
+    def __getitem__(self, item: str) -> logging.Logger:
+        """Retrieve Logger by name."""
         return self.loggers[item]
 
     @property
     def level(self) -> int:
-        """Logging Level"""
+        """Logging Level."""
         return self._level
 
     @level.setter
@@ -94,17 +132,15 @@ class EpiLog:
         return self._formatter
 
     @formatter.setter
-    def formatter(self, value: Optional[logging.Formatter]):
-        """Sets Logging Format"""
+    def formatter(self, value: logging.Formatter | None):
+        """Set Logging Format."""
         if value is None:
-            value = logging.Formatter(
-                "%(asctime)s | %(name)s | %(levelname)s | %(module)s.%(funcName)s:%(lineno)d | %(message)s"
-            )
+            value = defaultFormat
 
         if not issubclass(value.__class__, logging.Formatter):
             raise TypeError(f"Incorrect Formatter Type: {value.__class__}")
 
-        self._formatter = value
+        self._formatter: logging.Formatter = value
         self.stream.setFormatter(self.formatter)
         for log in self.loggers.values():
             for handle in log.handlers:
@@ -112,31 +148,32 @@ class EpiLog:
 
     @property
     def stream(self) -> logging.Handler:
-        """Stream Handler for Logging"""
+        """Stream Handler for Logging."""
         return self._stream
 
     @stream.setter
-    def stream(self, value: Optional[logging.Handler]):
-        """Replaces Logging Handler Streams."""
+    def stream(self, value: logging.Handler | None):
+        """Replace Logging Handler Streams."""
         if value is None:
             value = logging.StreamHandler()
 
         if not issubclass(value.__class__, (logging.Filterer, logging.Handler)):
             raise TypeError(f"Unsupported Stream Handler: {value.__class__}")
 
-        if hasattr(self, "_stream"):
+        elif hasattr(self, "_stream"):
             previous = self._stream
             value.setFormatter(self.formatter)
             value.setLevel(self.level)
-            self._stream = value
+            self._stream: logging.Handler = value
             for log in self.loggers.values():
                 log.removeHandler(previous)
                 log.addHandler(self.stream)
+
         else:
             self._stream = value
 
     def get_logger(self, name: str) -> logging.Logger:
-        """Initializes a new logger."""
+        """Initialize a new logger."""
         log = logging.getLogger(name)
         log.setLevel(self.level)
         log.addHandler(self.stream)
