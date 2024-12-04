@@ -26,58 +26,67 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from time import perf_counter_ns
+from typing import Iterator, Self, Tuple
 
 
 @dataclass
-class UnitTime:
-    """Unit Time comparing string id to a modifier of next unit."""
+class Unit:
+    """Unit comparing string id to a modifier of the next unit."""
 
     unit: str
     base: int = 1
     modifier: int | None = None
 
 
-NS_UNITS = (
-    UnitTime(unit="ns", modifier=1000),
-    UnitTime(unit="us", modifier=1000),
-    UnitTime(unit="ms", modifier=1000),
-    UnitTime(unit="s", modifier=60),
-    UnitTime(unit="min", modifier=60),
-    UnitTime(unit="hr", modifier=24),
-    UnitTime(unit="days", modifier=7),
-    UnitTime(unit="weeks", modifier=None),
+class Units:
+    """Container of Units."""
+
+    times: Tuple[Unit, ...]
+
+    def __init__(self, *times: Unit):
+        self.times = times
+        self._update()
+
+    def _update(self):
+        for n, current in enumerate(self.times[1:]):
+            previous = self.times[n]
+            current.base = previous.base * previous.modifier
+
+    def __iter__(self) -> Iterator[Unit]:
+        yield from self.times
+
+    def convert_units(self, value: int) -> Tuple[float, str]:
+        """Convert base unit into most relevant unit."""
+        new_time: float = float(value)
+        text: str = ""
+
+        for u in self:
+            new_time = value / u.base
+            text = u.unit
+            if u.modifier is None or new_time < u.modifier:
+                break
+
+        return new_time, text
+
+    def breakdown_units(self, value: int) -> dict[str, int]:
+        """Split base value into component unit bins."""
+        data = {}
+        for unit in reversed(self.times):
+            data[unit.unit], value = divmod(value, unit.base)
+
+        return data
+
+
+NS_UNITS = Units(
+    Unit(unit="ns", modifier=1000),
+    Unit(unit="us", modifier=1000),
+    Unit(unit="ms", modifier=1000),
+    Unit(unit="s", modifier=60),
+    Unit(unit="min", modifier=60),
+    Unit(unit="hr", modifier=24),
+    Unit(unit="days", modifier=7),
+    Unit(unit="weeks"),
 )
-
-
-def _update():
-    for n, current in enumerate(NS_UNITS[1:]):
-        previous = NS_UNITS[n]
-        current.base = previous.base * previous.modifier
-
-
-_update()
-
-
-def convert_units(time_ns: int) -> tuple[float, str]:
-    """Get More Accurate Timing."""
-    new_time: float = float(time_ns)
-    text: str = "ns"
-
-    for u in NS_UNITS:
-        new_time = time_ns / u.base
-        text = u.unit
-        if u.modifier is None or new_time < u.modifier:
-            break
-
-    return new_time, text
-
-
-def breakdown_units(value: int) -> dict[str, int]:
-    """Split ns value into component time bins."""
-    data = {}
-    for unit in reversed(NS_UNITS):
-        data[unit.unit], value = divmod(value, unit.base)
-    return data
 
 
 class BenchMark:
@@ -105,21 +114,26 @@ class BenchMark:
     t0: int
 
     def __init__(
-        self, log: logging.Logger, description: str, level: int = logging.INFO
-    ):
+        self,
+        log: logging.Logger,
+        description: str,
+        level: int = logging.INFO,
+    ) -> None:
         self.level = level
         self.enabled = log.isEnabledFor(self.level)
         self.log = log
         self.description = description
         self.t0 = 0
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         if self.enabled:
             self.t0 = perf_counter_ns()
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        end: int = perf_counter_ns()
+
         if exc_type is not None:
             self.log.error("Traceback:", exc_info=(exc_type, exc_val, exc_tb))
             return
@@ -127,6 +141,5 @@ class BenchMark:
         if not self.enabled:
             return
 
-        end = perf_counter_ns()
-        elapsed, unit = convert_units(end - self.t0)
+        elapsed, unit = NS_UNITS.convert_units(end - self.t0)
         self.log.log(self.level, "%s: (%.4f %s)", self.description, elapsed, unit)
