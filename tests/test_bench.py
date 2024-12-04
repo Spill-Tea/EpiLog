@@ -7,7 +7,7 @@ from typing import Generator, Tuple
 import pytest
 
 from EpiLog import EpiLog
-from EpiLog.benchmark import NS_UNITS, BenchMark, breakdown_units
+from EpiLog.benchmark import NS_UNITS, BenchMark
 
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def construct(build_manager) -> Generator[Tuple[StringIO, EpiLog], None, None]:
     assert stream.closed, "Expected Stream to be Closed."
 
 
-def test_empty_benchmark(construct):
+def test_empty_benchmark(construct: Tuple[StringIO, EpiLog]) -> None:
     """Tests that an Empty Benchmark context manager class correctly logs message."""
     stream, manager = construct
     manager.level = logging.INFO
@@ -44,7 +44,7 @@ def test_empty_benchmark(construct):
     assert "Traceback" not in output, "Error raised during use of context manager."
 
 
-def test_enabled(construct):
+def test_enabled(construct: Tuple[StringIO, EpiLog]) -> None:
     """Tests that a Benchmark Logging Level below a Log Level does not log."""
     stream, manager = construct
     manager.level = logging.CRITICAL
@@ -61,8 +61,8 @@ def test_enabled(construct):
     assert msg not in output, "Message Found in output stream after disabled Benchmark."
 
 
-def test_error(construct):
-    """Test that an error message is emitted when an occur occurs during context."""
+def test_error(construct: Tuple[StringIO, EpiLog]) -> None:
+    """Test that an error message is emitted when one occurs during context."""
     stream, manager = construct
     manager.level = logging.DEBUG
     log = manager.get_logger("errors")
@@ -88,9 +88,9 @@ def test_error(construct):
         (1_005_050_000, {"s": 1, "ms": 5, "us": 50}),
     ],
 )
-def test_breakdown(value, expected):
+def test_breakdown(value: int, expected: dict) -> None:
     """Test Breakdown of ns into appropriate time bins."""
-    result = breakdown_units(value)
+    result = NS_UNITS.breakdown_units(value)
     container = dict((i.unit, 0) for i in NS_UNITS)
     container.update(expected)
 
