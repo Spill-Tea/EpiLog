@@ -79,8 +79,7 @@ allow_redefinition = false
 force_uppercase_builtins = true
 
 [tool.pylint.main]
-extension-pkg-whitelist = ["skbio", "pyfastx"]
-ignore = ["tests", "benchmarks", "dist", "build"]
+ignore = ["tests", "dist", "build"]
 fail-under = 9.0
 jobs = 0
 limit-inference-results = 100
@@ -94,29 +93,9 @@ class-const-naming-style = "UPPER_CASE"
 class-naming-style = "PascalCase"
 variable-naming-style = "snake_case"
 module-naming-style = "any"
-# good-names = ["i", "j", "k", "ex", "run", "_", "e"]
 
 [tool.pylint.format]
 max-line-length = 88
-
-# [tool.pylint."messages control"]
-# disable = [
-#     "raw-checker-failed",
-#     "bad-inline-option",
-#     "locally-disabled",
-#     "file-ignored",
-#     "suppressed-message",
-#     "useless-suppression",
-#     "deprecated-pragma",
-#     "use-symbolic-message-instead",
-#     "use-implicit-booleaness-not-comparison-to-string",
-#     "use-implicit-booleaness-not-comparison-to-zero",
-#     "too-few-public-methods",
-#     "use-dict-literal",
-#     "too-many-arguments",
-#     "too-many-positional-arguments",
-#     "consider-using-max-builtin"
-# ]
 
 [tool.ruff]
 line-length = 88

@@ -169,6 +169,21 @@ class EpiLog:
         else:
             self._stream = value
 
+    def remove(self, name: str | logging.Logger) -> None:
+        """Remove a logger from local and global registry."""
+        if isinstance(name, logging.Logger):
+            name = name.name
+
+        logging.Logger.manager.loggerDict.pop(name)
+        log: logging.Logger = self.loggers.pop(name)
+
+        for handler in log.handlers:
+            handler.flush()
+            if id(handler) == id(self.stream):
+                continue
+            handler.close()
+        log.handlers.clear()
+
     def get_logger(self, name: str) -> logging.Logger:
         """Initialize a new logger."""
         log = logging.getLogger(name)
