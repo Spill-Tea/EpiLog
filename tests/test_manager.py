@@ -6,11 +6,14 @@ from io import StringIO
 
 import pytest
 
+from EpiLog import EpiLog
+from EpiLog.manager import defaultFormat
+
 
 @pytest.mark.parametrize("names", [("a", "b", "c"), ("b", "c", "d", "e")])
-def test_get_logger(names, build_manager):
+def test_get_logger(names, build_manager) -> None:
     """Tests that we correctly construct a named logger."""
-    manager = build_manager()
+    manager: EpiLog = build_manager()
     assert len(manager.loggers) == 0
 
     for n in names:
@@ -19,18 +22,18 @@ def test_get_logger(names, build_manager):
     assert all(i in manager.loggers for i in names)
 
 
-def test_logging(build_manager):
+def test_logging(build_manager) -> None:
     """Makes certain no errors are raised while logging."""
-    manager = build_manager()
+    manager: EpiLog = build_manager()
     log = manager.get_logger("test")
     log.info("Bob boop beep")
 
 
-def test_stream(build_manager):
+def test_stream(build_manager) -> None:
     """Tests that the message output by logging is actually written to stream."""
     stream = StringIO()
     handler = logging.StreamHandler(stream)
-    manager = build_manager(stream=handler)
+    manager: EpiLog = build_manager(stream=handler)
 
     log = manager.get_logger("test")
     message = "You are blind to reality and for that I am most proud"
@@ -43,13 +46,13 @@ def test_stream(build_manager):
     assert message in output, "Message not Found in output stream after logging"
 
 
-def test_level_change(build_manager):
+def test_level_change(build_manager) -> None:
     """Tests that modifying the Logging Level accurately filters log output."""
     stream = StringIO()
     handler = logging.StreamHandler(stream)
 
-    manager = build_manager(level=logging.INFO, stream=handler)
-    log = manager.get_logger("test")
+    manager: EpiLog = build_manager(level=logging.INFO, stream=handler)
+    log: logging.Logger = manager.get_logger("test")
 
     message = (
         "I would say that he's blessedly unburdened with the complications of a"
@@ -71,12 +74,12 @@ def test_level_change(build_manager):
     assert message in output, "Message not Found in output stream after logging"
 
 
-def test_format_change(build_manager):
+def test_format_change(build_manager) -> None:
     """Tests that modifying the Logging Format accurately Modifies log output Format."""
     stream = StringIO()
     handler = logging.StreamHandler(stream)
-    manager = build_manager(level=logging.INFO, stream=handler)
-    log = manager.get_logger("test")
+    manager: EpiLog = build_manager(level=logging.INFO, stream=handler)
+    log: logging.Logger = manager.get_logger("test")
 
     # Modify Formatter
     manager.formatter = logging.Formatter("%(levelname)s | %(message)s")
@@ -90,14 +93,14 @@ def test_format_change(build_manager):
     assert f"INFO | {message}\n" == output, "Expected Message format to match."
 
 
-def test_stream_change(build_manager):
+def test_stream_change(build_manager) -> None:
     """Tests that modifying the Logging Stream writes to the correct Stream."""
     stream_a = StringIO()
     stream_b = StringIO()
     handler_a = logging.StreamHandler(stream_a)
     handler_b = logging.StreamHandler(stream_b)
 
-    manager = build_manager(
+    manager: EpiLog = build_manager(
         level=logging.INFO,
         stream=handler_a,
         formatter=logging.Formatter("%(levelname)s | %(message)s"),
@@ -129,14 +132,19 @@ def test_stream_change(build_manager):
     assert output_b == expected, "Expected message to be written to current stream."
 
 
-def test_stream_change_to_none(build_manager):
-    """Confirm that when attempts to set the stream to none go to default stream."""
-    manager = build_manager()
-    manager.stream = None
+def test_stream_change_to_none(build_manager) -> None:
+    """Confirm that attempts to set the stream to none result in default stream."""
+    manager: EpiLog = build_manager()
+    assert manager.stream is not None, "Expected Default Stream to instantiate."
+    previous_id = id(manager.stream)
+
+    manager.stream = None  # type: ignore[assignment]
     assert manager.stream is not None, "Expected Default Stream to kick in."
     assert isinstance(
         manager.stream, (logging.Handler, logging.Filterer)
     ), "Unexpected stream type."
+
+    assert id(manager.stream) != previous_id, "Expected new stream instance."
 
 
 @pytest.mark.parametrize(
@@ -146,14 +154,16 @@ def test_stream_change_to_none(build_manager):
         logging.Formatter("%(name)s | %(levelname)s | %(message)s"),
     ],
 )
-def test_format(f, build_manager):
+def test_format(f, build_manager) -> None:
     """Tests expected behaviors when instantiating with Formatters."""
-    manager = build_manager(formatter=f)
+    manager: EpiLog = build_manager(formatter=f)
     if f is not None:
         assert manager.formatter == f, "Expected Logging Format to reflect input."
+    else:
+        assert id(manager.formatter) == id(defaultFormat), "Expected default formatter"
 
 
-def test_format_error(build_manager):
+def test_format_error(build_manager) -> None:
     """Test TypeError is raised when instantiating with invalid Formatters."""
     with pytest.raises(TypeError):
         build_manager(formatter="Failure")
@@ -170,13 +180,13 @@ def test_format_error(build_manager):
         logging.CRITICAL,
     ],
 )
-def test_levels(level, build_manager):
+def test_levels(level, build_manager) -> None:
     """Tests Expected instantiation Behavior of EpiLog class with Logging Level."""
-    manager = build_manager(level=level)
+    manager: EpiLog = build_manager(level=level)
     assert manager.level == level, "Expected Logging Level to be reflect input."
 
 
-def test_level_error(build_manager):
+def test_level_error(build_manager) -> None:
     """Tests ValueError is raised Expected when instantiating invalid Logging Level."""
     with pytest.raises(ValueError):
         build_manager(level=-1)
@@ -189,9 +199,9 @@ def test_level_error(build_manager):
         logging.StreamHandler(),
     ],
 )
-def test_handlers(handler, build_manager):
+def test_handlers(handler, build_manager) -> None:
     """Tests Expected instantiation Behavior of EpiLog class with stream."""
-    manager = build_manager(stream=handler)
+    manager: EpiLog = build_manager(stream=handler)
 
     # Cleanup by removing file created by file handler
     if isinstance(handler, logging.FileHandler):
@@ -200,15 +210,15 @@ def test_handlers(handler, build_manager):
     assert manager.stream == handler, "Expected Stream to reflect input."
 
 
-def test_handlers_error(build_manager):
+def test_handlers_error(build_manager) -> None:
     """Tests TypeError is raised Expected when instantiating invalid stream."""
     with pytest.raises(TypeError):
         build_manager(stream="handler")
 
 
-def test_get_log_by_name(build_manager):
+def test_get_log_by_name(build_manager) -> None:
     """Tests the special dunder method __get_item__ works as expected."""
-    manager = build_manager()
+    manager: EpiLog = build_manager()
     name = "get_item"
     log: logging.Logger = manager.get_logger(name)
 
