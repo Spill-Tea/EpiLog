@@ -82,7 +82,7 @@ class Units:
 
     def breakdown_units(self, value: int) -> Dict[str, int]:
         """Split base value into component unit bins."""
-        data = {}
+        data: Dict[str, int] = {}
         for unit in reversed(self.units):
             data[unit.unit], value = divmod(value, unit.base)
 
