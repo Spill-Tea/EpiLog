@@ -24,6 +24,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Set, Union
 
 
 defaultFormat = logging.Formatter(
@@ -40,7 +41,7 @@ defaultFormat = logging.Formatter(
 
 
 def _check_level(level: int) -> bool:
-    _levels = {
+    _levels: Set[int] = {
         logging.NOTSET,
         logging.DEBUG,
         logging.INFO,
@@ -56,19 +57,16 @@ class EpiLog:
     """Log Manager designed to centralize Local Module or Task level logging control.
 
     Args:
-    ----
         level (int): Logging Level
         stream (logging.Handler): Where logs are written to
         formatter (logging.Formatter): Dictates how to logs are formatted
 
     Notes:
-    -----
         * Natively Supports only a single Stream per instantiated logger.
         * Designed for local control of logging (i.e. Logging events from globally
             imported libraries are not captured)
 
-    Example:
-    -------
+    Examples:
         ``` python
 
             import logging
@@ -78,7 +76,6 @@ class EpiLog:
             manager = EpiLog(logging.DEBUG, formatter=formatter)
             log = manager.get_log(__name__)  # A logger created using manager settings
             log.debug("Logger Created")
-
         ```
 
     """
@@ -93,7 +90,7 @@ class EpiLog:
     def __init__(
         self,
         level: int = logging.INFO,
-        stream: logging.Handler | None = None,
+        stream: Union[logging.Handler, None] = None,
         formatter: logging.Formatter = defaultFormat,
     ):
         self.loggers: dict[str, logging.Logger] = {}
@@ -132,7 +129,7 @@ class EpiLog:
         return self._formatter
 
     @formatter.setter
-    def formatter(self, value: logging.Formatter | None):
+    def formatter(self, value: Union[logging.Formatter, None]):
         """Set Logging Format."""
         if value is None:
             value = defaultFormat
@@ -152,7 +149,7 @@ class EpiLog:
         return self._stream
 
     @stream.setter
-    def stream(self, value: logging.Handler | None):
+    def stream(self, value: Union[logging.Handler, None]):
         """Replace Logging Handler Streams."""
         if value is None:
             value = logging.StreamHandler()

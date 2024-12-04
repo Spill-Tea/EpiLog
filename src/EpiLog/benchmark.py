@@ -26,34 +26,46 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from time import perf_counter_ns
-from typing import Iterator, Self, Tuple
+from typing import Dict, Iterator, Tuple, Union
 
 
 @dataclass
 class Unit:
-    """Unit comparing string id to a modifier of the next unit."""
+    """Unit comparing string id to a modifier of the next unit.
+
+    Args:
+        unit (str): name of unit
+        base (int): value of unit
+        modifier (int | None): multiplier describing 1 of next unit
+
+    """
 
     unit: str
     base: int = 1
-    modifier: int | None = None
+    modifier: Union[int, None] = None
 
 
 class Units:
-    """Container of Units."""
+    """Container of Units.
 
-    times: Tuple[Unit, ...]
+    Args:
+        units (Unit): unit defintions
 
-    def __init__(self, *times: Unit):
-        self.times = times
+    """
+
+    units: Tuple[Unit, ...]
+
+    def __init__(self, *units: Unit):
+        self.units = units
         self._update()
 
     def _update(self):
-        for n, current in enumerate(self.times[1:]):
-            previous = self.times[n]
+        for n, current in enumerate(self.units[1:]):
+            previous = self.units[n]
             current.base = previous.base * previous.modifier
 
     def __iter__(self) -> Iterator[Unit]:
-        yield from self.times
+        yield from self.units
 
     def convert_units(self, value: int) -> Tuple[float, str]:
         """Convert base unit into most relevant unit."""
@@ -68,10 +80,10 @@ class Units:
 
         return new_time, text
 
-    def breakdown_units(self, value: int) -> dict[str, int]:
+    def breakdown_units(self, value: int) -> Dict[str, int]:
         """Split base value into component unit bins."""
         data = {}
-        for unit in reversed(self.times):
+        for unit in reversed(self.units):
             data[unit.unit], value = divmod(value, unit.base)
 
         return data
@@ -93,15 +105,23 @@ class BenchMark:
     """Context Manager to Benchmark any process through a log.
 
     Args:
-    ----
         log (logging.Logger):
         description (str): Message used to describe actions performed during benchmark.
         level (int): Logging Level
 
     Attributes:
-    ----------
         enabled (bool): If Benchmark level is compatible with log level to emit message.
         t0 (int): Entry time to benchmark suite.
+
+    Examples:
+        ```python
+        import logging
+        from EpiLog import Benchmark
+        log: logging.Logger = logging.getLogger("name")
+        message: str = "this is a message"
+        with Benchmark(log, message, logging.INFO):
+            perform_task(...)
+        ```
 
     """
 
@@ -125,7 +145,7 @@ class BenchMark:
         self.description = description
         self.t0 = 0
 
-    def __enter__(self) -> Self:
+    def __enter__(self) -> "BenchMark":
         if self.enabled:
             self.t0 = perf_counter_ns()
 
