@@ -79,8 +79,7 @@ allow_redefinition = false
 force_uppercase_builtins = true
 
 [tool.pylint.main]
-extension-pkg-whitelist = ["skbio", "pyfastx"]
-ignore = ["tests", "benchmarks", "dist", "build"]
+ignore = ["tests", "dist", "build"]
 fail-under = 9.0
 jobs = 0
 limit-inference-results = 100
