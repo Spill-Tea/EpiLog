@@ -244,6 +244,13 @@ def _confirm_removal(cls: EpiLog, name: Union[str, logging.Logger]):
         _name not in logging.Logger.manager.loggerDict
     ), "Expected logger to be removed from logging module registry"
 
+    # Confirm current stream is not closed
+    if hasattr(cls.stream, "_closed"):
+        # only available >=python3.10
+        assert not cls.stream._closed, "Expected current stream to remain open."
+    if hasattr(cls.stream, "stream"):
+        assert not cls.stream.stream.closed, "Expected current stream to remain open."
+
 
 def test_log_removal_by_name(build_manager):
     """Test we can remove a logger by providing the name of the logger."""
