@@ -3,6 +3,7 @@
 import logging
 import os
 from io import StringIO
+from typing import Union
 
 import pytest
 
@@ -223,3 +224,38 @@ def test_get_log_by_name(build_manager) -> None:
     log: logging.Logger = manager.get_logger(name)
 
     assert manager[name] == log, "Expected to retrieve the same logger via get item."
+
+
+def _confirm_removal(cls: EpiLog, name: Union[str, logging.Logger]):
+    if isinstance(name, logging.Logger):
+        _name = name.name
+    else:
+        _name = name
+
+    assert _name in cls.loggers, "Expected logger to be registered"
+    assert (
+        _name in logging.Logger.manager.loggerDict
+    ), "Expected logger to be in logging module registry"
+
+    cls.remove(name)
+
+    assert _name not in cls.loggers, "Expected logger to be removed locally"
+    assert (
+        _name not in logging.Logger.manager.loggerDict
+    ), "Expected logger to be removed from logging module registry"
+
+
+def test_log_removal_by_name(build_manager):
+    """Test we can remove a logger by providing the name of the logger."""
+    manager: EpiLog = build_manager()
+    name = "removal_by_name"
+    log: logging.Logger = manager.get_logger(name)
+    _confirm_removal(manager, name)
+
+
+def test_log_removal_by_logger(build_manager):
+    """Test we can remove a logger by providing the logger itself."""
+    manager: EpiLog = build_manager()
+    name = "removal_by_logger"
+    log: logging.Logger = manager.get_logger(name)
+    _confirm_removal(manager, log)
