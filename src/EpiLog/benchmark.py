@@ -96,7 +96,7 @@ class BenchMark:
 
     """
 
-    __slots__ = ("level", "enabled", "log", "description", "t0")
+    __slots__ = ("description", "enabled", "level", "log", "t0")
 
     level: int
     enabled: bool
@@ -124,7 +124,7 @@ class BenchMark:
             self.log.error("Traceback:", exc_info=(exc_type, exc_val, exc_tb))
             return
 
-        elif not self.enabled:
+        if not self.enabled:
             return
 
         end = perf_counter_ns()
