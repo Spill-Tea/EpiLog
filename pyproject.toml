@@ -28,25 +28,95 @@ version = {attr = "EpiLog.__version__"}
 readme = {file = ["README.md"], content-type = "text/markdown"}
 dependencies = {file = ["requirements.txt"]}
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["benchmarks", "docs", "tests"]
+
 [tool.setuptools.package-data]
 "*" = ["py.typed", "*.pyi"]
 
 [project.optional-dependencies]
-dev = ["EpiLog[doc,test,lint,type]"]
+dev = ["EpiLog[doc,test,lint,type]", "tox"]
 doc = ["pdoc"]
-test = ["pytest", "pytest-cov", "pytest-xdist"]
-lint = ["ruff"]
+test = ["pytest", "coverage", "pytest-xdist"]
+lint = ["pylint", "ruff"]
 type = ["mypy"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-n auto -rA --cov=EpiLog --cov-report term-missing --cov-fail-under=90"
+addopts = "-n auto -rA"
+
+[tool.coverage.run]
+parallel = true
+branch = true
+source = ["EpiLog"]
+disable_warnings = [
+   "no-data-collected",
+   "module-not-imported"
+]
+
+[tool.coverage.paths]
+source = ["src", "*/.tox/py*/**/site-packages"]
+
+[tool.coverage.report]
+fail_under = 95.0
+precision = 1
+show_missing = true
+skip_empty = true
+# skip_covered = true
+exclude_also = [
+   "def __repr__",
+   'if __name__ == "__main__"'
+]
 
 [tool.mypy]
 mypy_path = "EpiLog"
 warn_unused_ignores = true
 allow_redefinition = false
 force_uppercase_builtins = true
+
+[tool.pylint.main]
+extension-pkg-whitelist = ["skbio", "pyfastx"]
+ignore = ["tests", "benchmarks", "dist", "build"]
+fail-under = 9.0
+jobs = 0
+limit-inference-results = 100
+persistent = true
+suggestion-mode = true
+
+[tool.pylint.basic]
+argument-naming-style = "snake_case"
+attr-naming-style = "snake_case"
+class-const-naming-style = "UPPER_CASE"
+class-naming-style = "PascalCase"
+variable-naming-style = "snake_case"
+module-naming-style = "any"
+# good-names = ["i", "j", "k", "ex", "run", "_", "e"]
+
+[tool.pylint.format]
+max-line-length = 88
+
+# [tool.pylint."messages control"]
+# disable = [
+#     "raw-checker-failed",
+#     "bad-inline-option",
+#     "locally-disabled",
+#     "file-ignored",
+#     "suppressed-message",
+#     "useless-suppression",
+#     "deprecated-pragma",
+#     "use-symbolic-message-instead",
+#     "use-implicit-booleaness-not-comparison-to-string",
+#     "use-implicit-booleaness-not-comparison-to-zero",
+#     "too-few-public-methods",
+#     "use-dict-literal",
+#     "too-many-arguments",
+#     "too-many-positional-arguments",
+#     "consider-using-max-builtin"
+# ]
 
 [tool.ruff]
 line-length = 88
@@ -71,11 +141,17 @@ select = [
     "PLR1714",  # Consider merging multiple comparisons
 ]
 ignore = [
+    "D102",  # undocumented-public-method (D102)
     "D105",  # undocumented-magic-method (D105)
     "D107",  # undocumented-public-init (D107)
     "D203",  # one-blank-line-before-class (D203)
     "D213",  # multi-line-summary-second-line (D213)
+    "PLR0913",  # too-many-arguments (PLR0913)
+    "C408",  # unnecessary-collection-call (C408)
 ]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"  # Accepts: "google" | "numpy" | "pep257"
 
 [tool.ruff.lint.isort]
 lines-after-imports = 2
@@ -84,6 +160,12 @@ lines-after-imports = 2
 "__init__.py" = [
    "E402",  # Import Statement not at Top of File
    "F401",  # Unused Imports
+]
+"tests/*.py" = [
+    "D",  # PyDocstyle
+    "PLR2004",  # magic-value-comparison (PLR2004)
+    "F841",  # unused-variable (F841)
+    "PLR0911",  # too-many-return-statements (PLR0911)
 ]
 
 [tool.ruff.format]

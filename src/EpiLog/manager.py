@@ -83,7 +83,7 @@ class EpiLog:
 
     """
 
-    __slots__ = ("loggers", "_level", "_formatter", "_stream")
+    __slots__ = ("_formatter", "_level", "_stream", "loggers")
 
     _level: int
     _stream: logging.Handler
@@ -99,9 +99,9 @@ class EpiLog:
         self.loggers: dict[str, logging.Logger] = {}
 
         # Use property setters to manage attributes
-        self.stream = stream or logging.StreamHandler()  # noqa: PLE0237
-        self.level = level  # noqa: PLE0237
-        self.formatter = formatter  # noqa: PLE0237
+        self.stream = stream or logging.StreamHandler()
+        self.level = level
+        self.formatter = formatter
 
     def __getitem__(self, item: str) -> logging.Logger:
         """Retrieve Logger by name."""
@@ -160,7 +160,7 @@ class EpiLog:
         if not issubclass(value.__class__, (logging.Filterer, logging.Handler)):
             raise TypeError(f"Unsupported Stream Handler: {value.__class__}")
 
-        elif hasattr(self, "_stream"):
+        if hasattr(self, "_stream"):
             previous = self._stream
             value.setFormatter(self.formatter)
             value.setLevel(self.level)
