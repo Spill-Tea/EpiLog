@@ -40,7 +40,7 @@ assert __name__ not in manager
 
 
 Benchmarking real time duration to accomplish a function,
-or sereis of tasks within a facile context manager.
+or a series of tasks within a facile context manager.
 
 ```python
 import logging
