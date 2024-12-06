@@ -104,6 +104,9 @@ class EpiLog:
         """Retrieve Logger by name."""
         return self.loggers[item]
 
+    def __contains__(self, value: str) -> bool:
+        return value in self.loggers
+
     @property
     def level(self) -> int:
         """Logging Level."""
@@ -186,7 +189,10 @@ class EpiLog:
 
     def get_logger(self, name: str) -> logging.Logger:
         """Initialize a new logger."""
-        log = logging.getLogger(name)
+        if name in self:
+            return self[name]
+
+        log: logging.Logger = logging.getLogger(name)
         log.setLevel(self.level)
         log.addHandler(self.stream)
         self.loggers[name] = log

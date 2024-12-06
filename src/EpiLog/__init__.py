@@ -25,4 +25,4 @@ from .benchmark import BenchMark
 from .manager import EpiLog
 
 
-__version__ = "1.1.1"
+__version__ = "1.1.2"
