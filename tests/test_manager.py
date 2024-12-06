@@ -19,8 +19,19 @@ def test_get_logger(names, build_manager: Callable[..., EpiLog]) -> None:
 
     for n in names:
         manager.get_logger(n)
-    assert len(manager.loggers) == len(names)
+    assert len(manager.loggers) == len(set(names))
     assert all(i in manager.loggers for i in names)
+    assert all(j in manager for j in names)
+
+
+def test_get_logger_name_caches(build_manager: Callable[..., EpiLog]) -> None:
+    """Tests that we retrieve the same logger with the same name."""
+    manager: EpiLog = build_manager()
+    name: str = "doublethink"
+    loga: logging.Logger = manager.get_logger(name)
+    logb: logging.Logger = manager.get_logger(name)
+
+    assert id(loga) == id(logb), "Expected same object."
 
 
 def test_logging(build_manager: Callable[..., EpiLog]) -> None:
