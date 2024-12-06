@@ -195,6 +195,6 @@ class EpiLog:
         log: logging.Logger = logging.getLogger(name)
         log.setLevel(self.level)
         log.addHandler(self.stream)
-        self[name] = log
+        self.loggers[name] = log
 
         return log
