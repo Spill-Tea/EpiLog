@@ -43,7 +43,7 @@ jobs:
           tox -e lint
 
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
@@ -68,16 +68,15 @@ jobs:
       - name: Setup Tox Python Version (${{ matrix.os }})
         if: matrix.os != 'windows-latest'
         run: |
-            echo "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $GITHUB_ENV
+          echo "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $GITHUB_ENV
 
-      - name: Setup Tox Python Version (${{ matrix.os }})
+      - name: Setup Tox Python Version (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          echo "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests"| Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $env:GITHUB_ENV
 
       - name: Pytest Unit Testing
         run: |
-          echo "Environment: ${{ env.TOX_VERSION }}"
           tox -e ${{ env.TOX_VERSION }}
 
       - name: Save Coverage Data Temporarily
