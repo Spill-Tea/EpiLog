@@ -73,7 +73,7 @@ jobs:
       - name: Setup Tox Python Version (${{ matrix.os }})
         if: matrix.os == 'windows-latest'
         run: |
-          "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $env:GITHUB_ENV
+          echo "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $env:GITHUB_ENV
 
       - name: Pytest Unit Testing
         run: |
