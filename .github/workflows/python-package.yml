@@ -43,11 +43,12 @@ jobs:
           tox -e lint
 
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - name: Checkout EpiLog
@@ -63,7 +64,16 @@ jobs:
           python -m pip install -U pip
           python -m pip install setuptools wheel
           pip install tox
+
+      - name: Setup Tox Python Version (${{ matrix.os }})
+        if: matrix.os != 'windows-latest'
+        run: |
           echo "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $GITHUB_ENV
+
+      - name: Setup Tox Python Version (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "TOX_VERSION=py$(echo ${{ matrix.python-version }} | tr -d .)-tests" >> $env:GITHUB_ENV
 
       - name: Pytest Unit Testing
         run: |
@@ -72,7 +82,7 @@ jobs:
       - name: Save Coverage Data Temporarily
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-data-${{ matrix.python-version }}
+          name: coverage-data-${{ matrix.os }}-${{ matrix.python-version }}
           path: .coverage.*
           retention-days: 1
           if-no-files-found: ignore

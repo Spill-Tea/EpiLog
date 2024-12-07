@@ -7,7 +7,7 @@ from typing import Generator, Tuple
 import pytest
 
 from EpiLog import EpiLog
-from EpiLog.benchmark import NS_UNITS, BenchMark
+from EpiLog.benchmark import NS_UNITS, BenchMark, Units
 
 
 @pytest.fixture
@@ -75,6 +75,36 @@ def test_error(construct: Tuple[StringIO, EpiLog]) -> None:
     output = stream.read()
     assert "ERROR" in output, "Expected Error Level Log Emitted"
     assert "Traceback" in output, "Expected Log message to include traceback info."
+
+
+def test_empty_convert_units():
+    """Test branch point in Units class to calculate unit conversion method."""
+    instance = Units()
+    value: float = 1.2
+    res, u = instance.convert_units(value)
+
+    assert res == value, "Expected same value."
+    assert u == "", "Expected empty unit string."
+
+
+@pytest.mark.parametrize(
+    ["value", "expected"],
+    [
+        (50, (50.0, "ns")),
+        (1000, (1.0, "us")),
+        (500_000, (500.0, "us")),
+        (1_000_000, (1.0, "ms")),
+        (1_000_000_000, (1.0, "s")),
+        (60_000_000_000, (1.0, "min")),
+        (3_600_000_000_000, (1.0, "hr")),
+        (86_400_000_000_000, (1.0, "days")),
+        (604_800_000_000_000, (1.0, "weeks")),
+    ],
+)
+def test_units_convert_units(value: int, expected: float):
+    """Test that we correctly convert units to largest relevant bin."""
+    result = NS_UNITS.convert_units(value)
+    assert result == expected, "Unexpected conversion."
 
 
 @pytest.mark.parametrize(
