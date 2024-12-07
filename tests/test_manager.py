@@ -1,7 +1,6 @@
 """Unit tests to examine the Expected Behavior of the EpiLog Logging Manager."""
 
 import logging
-import os
 from io import StringIO
 from typing import Callable, Union
 
@@ -43,105 +42,104 @@ def test_logging(build_manager: Callable[..., EpiLog]) -> None:
 
 def test_stream(build_manager: Callable[..., EpiLog]) -> None:
     """Tests that the message output by logging is actually written to stream."""
-    stream = StringIO()
-    handler = logging.StreamHandler(stream)
-    manager: EpiLog = build_manager(stream=handler)
+    with StringIO() as stream:
+        handler = logging.StreamHandler(stream)
+        manager: EpiLog = build_manager(stream=handler)
 
-    log = manager.get_logger("test")
-    message = "You are blind to reality and for that I am most proud"
-    log.info(message)
+        log = manager.get_logger("test")
+        message = "You are blind to reality and for that I am most proud"
+        log.info(message)
 
-    stream.seek(0)
-    output = stream.read()
-    stream.close()
+        stream.seek(0)
+        output = stream.read()
+        stream.close()
 
-    assert message in output, "Message not Found in output stream after logging"
+        assert message in output, "Message not Found in output stream after logging"
 
 
 def test_level_change(build_manager: Callable[..., EpiLog]) -> None:
     """Tests that modifying the Logging Level accurately filters log output."""
-    stream = StringIO()
-    handler = logging.StreamHandler(stream)
+    with StringIO() as stream:
+        handler = logging.StreamHandler(stream)
 
-    manager: EpiLog = build_manager(level=logging.INFO, stream=handler)
-    log: logging.Logger = manager.get_logger("test")
+        manager: EpiLog = build_manager(level=logging.INFO, stream=handler)
+        log: logging.Logger = manager.get_logger("test")
 
-    message = (
-        "I would say that he's blessedly unburdened with the complications of a"
-        " university education."
-    )
-    log.debug(message)
-    stream.seek(0)
-    output = stream.read()
-    assert message not in output, "Message should not have been Received"
+        message = (
+            "I would say that he's blessedly unburdened with the complications of a"
+            " university education."
+        )
+        log.debug(message)
+        stream.seek(0)
+        output = stream.read()
+        assert message not in output, "Message should not have been Received"
 
-    # Then repeat after Changing level
-    manager.level = logging.DEBUG
-    log.debug(message)
+        # Then repeat after Changing level
+        manager.level = logging.DEBUG
+        log.debug(message)
 
-    stream.seek(0)
-    output = stream.read()
-    stream.close()
+        stream.seek(0)
+        output = stream.read()
+        stream.close()
 
-    assert message in output, "Message not Found in output stream after logging"
+        assert message in output, "Message not Found in output stream after logging"
 
 
 def test_format_change(build_manager: Callable[..., EpiLog]) -> None:
     """Tests that modifying the Logging Format accurately Modifies log output Format."""
-    stream = StringIO()
-    handler = logging.StreamHandler(stream)
-    manager: EpiLog = build_manager(level=logging.INFO, stream=handler)
-    log: logging.Logger = manager.get_logger("test")
+    with StringIO() as stream:
+        handler = logging.StreamHandler(stream)
+        manager: EpiLog = build_manager(level=logging.INFO, stream=handler)
+        log: logging.Logger = manager.get_logger("test")
 
-    # Modify Formatter
-    manager.formatter = logging.Formatter("%(levelname)s | %(message)s")
-    message = "I have no idea why all of this is happening or how to control it."
-    log.info(message)
+        # Modify Formatter
+        manager.formatter = logging.Formatter("%(levelname)s | %(message)s")
+        message = "I have no idea why all of this is happening or how to control it."
+        log.info(message)
 
-    stream.seek(0)
-    output = stream.read()
-    stream.close()
+        stream.seek(0)
+        output = stream.read()
+        stream.close()
 
-    assert f"INFO | {message}\n" == output, "Expected Message format to match."
+        assert f"INFO | {message}\n" == output, "Expected Message format to match."
 
 
 def test_stream_change(build_manager: Callable[..., EpiLog]) -> None:
     """Tests that modifying the Logging Stream writes to the correct Stream."""
-    stream_a = StringIO()
-    stream_b = StringIO()
-    handler_a = logging.StreamHandler(stream_a)
-    handler_b = logging.StreamHandler(stream_b)
+    with StringIO() as stream_a, StringIO() as stream_b:
+        handler_a = logging.StreamHandler(stream_a)
+        handler_b = logging.StreamHandler(stream_b)
 
-    manager: EpiLog = build_manager(
-        level=logging.INFO,
-        stream=handler_a,
-        formatter=logging.Formatter("%(levelname)s | %(message)s"),
-    )
-    log = manager.get_logger("test")
+        manager: EpiLog = build_manager(
+            level=logging.INFO,
+            stream=handler_a,
+            formatter=logging.Formatter("%(levelname)s | %(message)s"),
+        )
+        log = manager.get_logger("test")
 
-    # Modify Stream
-    manager.stream = handler_b
-    assert manager.stream == handler_b, "Unexpected Stream."
+        # Modify Stream
+        manager.stream = handler_b
+        assert manager.stream == handler_b, "Unexpected Stream."
 
-    message = (
-        "You humans have so many emotions! You only need two: anger and confusion!"
-    )
-    expected = f"INFO | {message}\n"
-    log.info(message)
+        message = (
+            "You humans have so many emotions! You only need two: anger and confusion!"
+        )
+        expected = f"INFO | {message}\n"
+        log.info(message)
 
-    # Test first stream
-    stream_a.seek(0)
-    output_a = stream_a.read()
-    stream_a.close()
-    assert (
-        output_a != expected
-    ), "Did not Expect message to be written to previous stream."
+        # Test first stream
+        stream_a.seek(0)
+        output_a = stream_a.read()
+        stream_a.close()
+        assert (
+            output_a != expected
+        ), "Did not Expect message to be written to previous stream."
 
-    # Test Second, Expected stream
-    stream_b.seek(0)
-    output_b = stream_b.read()
-    stream_b.close()
-    assert output_b == expected, "Expected message to be written to current stream."
+        # Test Second, Expected stream
+        stream_b.seek(0)
+        output_b = stream_b.read()
+        stream_b.close()
+        assert output_b == expected, "Expected message to be written to current stream."
 
 
 def test_stream_change_to_none(build_manager: Callable[..., EpiLog]) -> None:
@@ -166,7 +164,7 @@ def test_stream_change_to_none(build_manager: Callable[..., EpiLog]) -> None:
         logging.Formatter("%(name)s | %(levelname)s | %(message)s"),
     ],
 )
-def test_format(f, build_manager: Callable[..., EpiLog]) -> None:
+def test_format_instantiation(f, build_manager: Callable[..., EpiLog]) -> None:
     """Tests expected behaviors when instantiating with Formatters."""
     manager: EpiLog = build_manager(formatter=f)
     if f is not None:
@@ -192,14 +190,14 @@ def test_format_error(build_manager: Callable[..., EpiLog]) -> None:
         logging.CRITICAL,
     ],
 )
-def test_levels(level, build_manager: Callable[..., EpiLog]) -> None:
+def test_levels_instantiation(level, build_manager: Callable[..., EpiLog]) -> None:
     """Tests Expected instantiation Behavior of EpiLog class with Logging Level."""
     manager: EpiLog = build_manager(level=level)
     assert manager.level == level, "Expected Logging Level to be reflect input."
 
 
 def test_level_error(build_manager: Callable[..., EpiLog]) -> None:
-    """Tests ValueError is raised Expected when instantiating invalid Logging Level."""
+    """Tests that a ValueError is raised when instantiating invalid Logging Level."""
     with pytest.raises(ValueError):
         build_manager(level=-1)
 
@@ -211,19 +209,14 @@ def test_level_error(build_manager: Callable[..., EpiLog]) -> None:
         logging.StreamHandler(),
     ],
 )
-def test_handlers(handler, build_manager: Callable[..., EpiLog]) -> None:
+def test_handlers_instantiation(handler, build_manager: Callable[..., EpiLog]) -> None:
     """Tests Expected instantiation Behavior of EpiLog class with stream."""
     manager: EpiLog = build_manager(stream=handler)
-
-    # Cleanup by removing file created by file handler
-    if isinstance(handler, logging.FileHandler):
-        os.remove(handler.baseFilename)
-
     assert manager.stream == handler, "Expected Stream to reflect input."
 
 
 def test_handlers_error(build_manager: Callable[..., EpiLog]) -> None:
-    """Tests TypeError is raised Expected when instantiating invalid stream."""
+    """Tests that a TypeError is raised when instantiating invalid stream."""
     with pytest.raises(TypeError):
         build_manager(stream="handler")
 
@@ -277,3 +270,29 @@ def test_log_removal_by_logger(build_manager: Callable[..., EpiLog]) -> None:
     name = "removal_by_logger"
     log: logging.Logger = manager.get_logger(name)
     _confirm_removal(manager, log)
+
+
+def test_log_removal_with_additional_handler(
+    build_manager: Callable[..., EpiLog],
+) -> None:
+    """Test that additional handlers are closed on removal."""
+    manager: EpiLog = build_manager()
+    name = "removal_by_logger"
+    log: logging.Logger = manager.get_logger(name)
+
+    with StringIO() as stream:
+        second_handler = logging.StreamHandler(stream)
+        log.addHandler(second_handler)
+
+        assert not stream.closed, "Expected stream to be open."
+        _confirm_removal(manager, log)
+
+        if hasattr(second_handler, "_closed"):
+            assert second_handler._closed, "Expected additional Handler to be closed."
+
+        # NOTE: The StreamHandler doesn't actually close the stream. Instead it removes
+        #       the weakref from the private internal logging handler registry. I
+        #       suspect this is because the default stream is sys.stderr, which cannot
+        #       be closed.
+        # assert stream.closed, "Expected stream to be closed."
+        # assert second_handler.stream.closed, "Expected stream to be closed."
