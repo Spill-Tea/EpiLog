@@ -202,17 +202,25 @@ def test_level_error(build_manager: Callable[..., EpiLog]) -> None:
         build_manager(level=-1)
 
 
-@pytest.mark.parametrize(
-    "handler",
-    [
-        logging.FileHandler("test.log"),
-        logging.StreamHandler(),
-    ],
-)
-def test_handlers_instantiation(handler, build_manager: Callable[..., EpiLog]) -> None:
+def _confirm_handler_instantiation(
+    handler: logging.Handler,
+    constructor: Callable[..., EpiLog],
+) -> None:
     """Tests Expected instantiation Behavior of EpiLog class with stream."""
-    manager: EpiLog = build_manager(stream=handler)
+    manager: EpiLog = constructor(stream=handler)
     assert manager.stream == handler, "Expected Stream to reflect input."
+
+
+def test_streamhandler_instantiation(build_manager: Callable[..., EpiLog]) -> None:
+    """Tests Expected instantiation Behavior of EpiLog class with stream handler."""
+    stream = logging.StreamHandler()
+    _confirm_handler_instantiation(stream, build_manager)
+
+
+def test_filehandler_instantiation(build_manager: Callable[..., EpiLog]) -> None:
+    """Tests Expected instantiation Behavior of EpiLog class with file handler."""
+    stream = logging.FileHandler("test.log")
+    _confirm_handler_instantiation(stream, build_manager)
 
 
 def test_handlers_error(build_manager: Callable[..., EpiLog]) -> None:
