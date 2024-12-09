@@ -4,19 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "EpiLog"
-authors = [
-    {name = "Jason C Del Rio", email = "spillthetea917@gmail.com"},
-]
-maintainers = [
-    {name = "Jason C Del Rio", email = "spillthetea917@gmail.com"},
-]
+authors = [{ name = "Jason C Del Rio", email = "spillthetea917@gmail.com" }]
+maintainers = [{ name = "Jason C Del Rio", email = "spillthetea917@gmail.com" }]
 description = "Simple No-Frills Logging Manager"
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 requires-python = ">=3.7"
 keywords = ["logging", "benchmark"]
-classifiers = [
-    "Programming Language :: Python :: 3",
-]
+classifiers = ["Programming Language :: Python :: 3"]
 dynamic = ["version", "readme", "dependencies"]
 
 [project.urls]
@@ -24,12 +18,12 @@ homepage = "https://github.com/Spill-Tea/EpiLog"
 issues = "https://github.com/Spill-Tea/EpiLog/issues"
 
 [tool.setuptools.dynamic]
-version = {attr = "EpiLog.__version__"}
-readme = {file = ["README.md"], content-type = "text/markdown"}
-dependencies = {file = ["requirements.txt"]}
+version = { attr = "EpiLog.__version__" }
+readme = { file = ["README.md"], content-type = "text/markdown" }
+dependencies = { file = ["requirements.txt"] }
 
 [tool.setuptools]
-package-dir = {"" = "src"}
+package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -53,10 +47,7 @@ addopts = "-n auto -rA"
 parallel = true
 branch = true
 source = ["EpiLog"]
-disable_warnings = [
-   "no-data-collected",
-   "module-not-imported"
-]
+disable_warnings = ["no-data-collected", "module-not-imported"]
 
 [tool.coverage.paths]
 source = ["src", "*/.tox/py*/**/site-packages"]
@@ -67,10 +58,7 @@ precision = 1
 show_missing = true
 skip_empty = true
 # skip_covered = true
-exclude_also = [
-   "def __repr__",
-   'if __name__ == "__main__"'
-]
+exclude_also = ["def __repr__", 'if __name__ == "__main__"']
 
 [tool.mypy]
 mypy_path = "EpiLog"
@@ -104,46 +92,46 @@ respect-gitignore = true
 
 [tool.ruff.lint]
 select = [
-    "B",  # bugbear
-    "D",  # pydocstyle
-    "E",  # pycodestyle
-    "F",  # pyflakes
-    "I",  # isort
-    "PYI",  # flake8-pyi
-    "RUF",  # ruff
-    "W",  # pycodestyle
-    "PIE",  # flake8-pie
-    "PGH004",  # pygrep-hooks - Use specific rule codes when using noqa
-    "PLE",  # pylint error
-    "PLW",  # pylint warning
-    "PLR1714",  # Consider merging multiple comparisons
+  "B",       # bugbear
+  "D",       # pydocstyle
+  "E",       # pycodestyle
+  "F",       # pyflakes
+  "I",       # isort
+  "PYI",     # flake8-pyi
+  "RUF",     # ruff
+  "W",       # pycodestyle
+  "PIE",     # flake8-pie
+  "PGH004",  # pygrep-hooks - Use specific rule codes when using noqa
+  "PLE",     # pylint error
+  "PLW",     # pylint warning
+  "PLR1714", # Consider merging multiple comparisons
 ]
 ignore = [
-    "D102",  # undocumented-public-method (D102)
-    "D105",  # undocumented-magic-method (D105)
-    "D107",  # undocumented-public-init (D107)
-    "D203",  # one-blank-line-before-class (D203)
-    "D213",  # multi-line-summary-second-line (D213)
-    "PLR0913",  # too-many-arguments (PLR0913)
-    "C408",  # unnecessary-collection-call (C408)
+  "D102",    # undocumented-public-method (D102)
+  "D105",    # undocumented-magic-method (D105)
+  "D107",    # undocumented-public-init (D107)
+  "D203",    # one-blank-line-before-class (D203)
+  "D213",    # multi-line-summary-second-line (D213)
+  "PLR0913", # too-many-arguments (PLR0913)
+  "C408",    # unnecessary-collection-call (C408)
 ]
 
 [tool.ruff.lint.pydocstyle]
-convention = "google"  # Accepts: "google" | "numpy" | "pep257"
+convention = "google" # Accepts: "google" | "numpy" | "pep257"
 
 [tool.ruff.lint.isort]
 lines-after-imports = 2
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = [
-   "E402",  # Import Statement not at Top of File
-   "F401",  # Unused Imports
+  "E402", # Import Statement not at Top of File
+  "F401", # Unused Imports
 ]
 "tests/*.py" = [
-    "D",  # PyDocstyle
-    "PLR2004",  # magic-value-comparison (PLR2004)
-    "F841",  # unused-variable (F841)
-    "PLR0911",  # too-many-return-statements (PLR0911)
+  "D",       # PyDocstyle
+  "PLR2004", # magic-value-comparison (PLR2004)
+  "F841",    # unused-variable (F841)
+  "PLR0911", # too-many-return-statements (PLR0911)
 ]
 
 [tool.ruff.format]
