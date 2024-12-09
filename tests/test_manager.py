@@ -12,13 +12,18 @@ from EpiLog.manager import defaultFormat
 
 
 @pytest.mark.parametrize("names", [("a", "b", "c"), ("b", "c", "d", "e")])
-def test_get_logger(names, build_manager: Callable[..., EpiLog]) -> None:
+@pytest.mark.parametrize("fn_name", ["get_logger", "dispatch"])
+def test_get_logger(
+    names: tuple[str],
+    fn_name: str,
+    build_manager: Callable[..., EpiLog],
+) -> None:
     """Tests that we correctly construct a named logger."""
     manager: EpiLog = build_manager()
     assert len(manager.loggers) == 0
-
+    function = getattr(manager, fn_name)
     for n in names:
-        manager.get_logger(n)
+        function(n)
     assert len(manager.loggers) == len(set(names))
     assert all(i in manager.loggers for i in names)
     assert all(j in manager for j in names)
