@@ -1,5 +1,7 @@
 """Pytest Fixtures and Utilities."""
 
+from __future__ import annotations
+
 import logging
 import os
 from typing import Callable, Generator, Optional

@@ -1,8 +1,11 @@
 """Unit tests to examine the Expected Behavior of the EpiLog Logging Manager."""
 
+from __future__ import annotations
+
 import logging
-from io import StringIO
-from typing import Callable, Union
+import sys
+from io import IOBase, StringIO
+from typing import Callable, Tuple, Union
 
 import pytest
 
@@ -11,13 +14,18 @@ from EpiLog.manager import defaultFormat
 
 
 @pytest.mark.parametrize("names", [("a", "b", "c"), ("b", "c", "d", "e")])
-def test_get_logger(names, build_manager: Callable[..., EpiLog]) -> None:
+@pytest.mark.parametrize("fn_name", ["get_logger", "dispatch"])
+def test_get_logger(
+    names: Tuple[str],
+    fn_name: str,
+    build_manager: Callable[..., EpiLog],
+) -> None:
     """Tests that we correctly construct a named logger."""
     manager: EpiLog = build_manager()
     assert len(manager.loggers) == 0
-
+    function = getattr(manager, fn_name)
     for n in names:
-        manager.get_logger(n)
+        function(n)
     assert len(manager.loggers) == len(set(names))
     assert all(i in manager.loggers for i in names)
     assert all(j in manager for j in names)
@@ -27,10 +35,10 @@ def test_get_logger_name_caches(build_manager: Callable[..., EpiLog]) -> None:
     """Tests that we retrieve the same logger with the same name."""
     manager: EpiLog = build_manager()
     name: str = "doublethink"
-    loga: logging.Logger = manager.get_logger(name)
-    logb: logging.Logger = manager.get_logger(name)
+    log_a: logging.Logger = manager.get_logger(name)
+    log_b: logging.Logger = manager.get_logger(name)
 
-    assert id(loga) == id(logb), "Expected same object."
+    assert id(log_a) == id(log_b), "Expected same object."
 
 
 def test_logging(build_manager: Callable[..., EpiLog]) -> None:
@@ -280,27 +288,54 @@ def test_log_removal_by_logger(build_manager: Callable[..., EpiLog]) -> None:
     _confirm_removal(manager, log)
 
 
+def _handle_second_removal(
+    stream: IOBase,
+    log: logging.Logger,
+    manager: EpiLog,
+) -> logging.StreamHandler:
+    second_handler = logging.StreamHandler(stream)
+    log.addHandler(second_handler)
+
+    assert not stream.closed, "Expected stream to be open."
+    _confirm_removal(manager, log)
+
+    if hasattr(second_handler, "_closed"):
+        assert second_handler._closed, "Expected additional Handler to be closed."
+
+    return second_handler
+
+
 def test_log_removal_with_additional_handler(
     build_manager: Callable[..., EpiLog],
 ) -> None:
-    """Test that additional handlers are closed on removal."""
+    """Test that additional handlers and their streams are closed on removal."""
     manager: EpiLog = build_manager()
     name = "removal_by_logger"
     log: logging.Logger = manager.get_logger(name)
 
     with StringIO() as stream:
-        second_handler = logging.StreamHandler(stream)
-        log.addHandler(second_handler)
+        second_handler = _handle_second_removal(stream, log, manager)
+        assert stream.closed, "Expected stream to be closed."
+        assert second_handler.stream.closed, "Expected stream to be closed."
 
-        assert not stream.closed, "Expected stream to be open."
-        _confirm_removal(manager, log)
 
-        if hasattr(second_handler, "_closed"):
-            assert second_handler._closed, "Expected additional Handler to be closed."
+@pytest.mark.parametrize(
+    ["stream"],
+    [
+        (sys.stderr,),
+        (sys.stdin,),
+        (sys.stdout,),
+    ],
+)
+def test_log_removal_with_protected_streams(
+    build_manager: Callable[..., EpiLog],
+    stream: IOBase,
+) -> None:
+    """Test additional handler is closed on removal, but sys streams remain open."""
+    manager: EpiLog = build_manager()
+    name = "removal_by_logger"
+    log: logging.Logger = manager.get_logger(name)
 
-        # NOTE: The StreamHandler doesn't actually close the stream. Instead it removes
-        #       the weakref from the private internal logging handler registry. I
-        #       suspect this is because the default stream is sys.stderr, which cannot
-        #       be closed.
-        # assert stream.closed, "Expected stream to be closed."
-        # assert second_handler.stream.closed, "Expected stream to be closed."
+    second_handler = _handle_second_removal(stream, log, manager)
+    assert not stream.closed, "Expected protected stream to remain open."
+    assert not second_handler.stream.closed, "Expected protected stream to remain open."
