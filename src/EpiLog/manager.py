@@ -24,9 +24,22 @@
 from __future__ import annotations
 
 import logging
-from typing import Set, Union
+import sys
+from io import UnsupportedOperation
+from typing import FrozenSet, Union
 
 
+PROTECTED_STREAMS = (sys.stderr, sys.stdin, sys.stdout)
+LOGGING_LEVELS: FrozenSet[int] = frozenset(
+    {
+        logging.NOTSET,
+        logging.DEBUG,
+        logging.INFO,
+        logging.WARN,
+        logging.ERROR,
+        logging.CRITICAL,
+    }
+)
 defaultFormat = logging.Formatter(
     " | ".join(
         [
@@ -41,16 +54,7 @@ defaultFormat = logging.Formatter(
 
 
 def _check_level(level: int) -> bool:
-    _levels: Set[int] = {
-        logging.NOTSET,
-        logging.DEBUG,
-        logging.INFO,
-        logging.WARN,
-        logging.ERROR,
-        logging.CRITICAL,
-    }
-
-    return level in _levels
+    return level in LOGGING_LEVELS
 
 
 class EpiLog:
@@ -113,10 +117,10 @@ class EpiLog:
         return self._level
 
     @level.setter
-    def level(self, value: int):
+    def level(self, value: int) -> None:
         """Set Logging Level."""
         if _check_level(value) is False:
-            raise ValueError(f"Invalid Logging Level: {value}")
+            raise ValueError(f"Unsupported Logging Level: {value}")
 
         self._level = value
         self.stream.setLevel(self.level)
@@ -132,7 +136,7 @@ class EpiLog:
         return self._formatter
 
     @formatter.setter
-    def formatter(self, value: Union[logging.Formatter, None]):
+    def formatter(self, value: Union[logging.Formatter, None]) -> None:
         """Set Logging Format."""
         if value is None:
             value = defaultFormat
@@ -152,7 +156,7 @@ class EpiLog:
         return self._stream
 
     @stream.setter
-    def stream(self, value: Union[logging.Handler, None]):
+    def stream(self, value: Union[logging.Handler, None]) -> None:
         """Replace Logging Handler Streams."""
         if value is None:
             value = logging.StreamHandler()
@@ -172,8 +176,8 @@ class EpiLog:
         else:
             self._stream = value
 
-    def remove(self, name: str | logging.Logger) -> None:
-        """Remove a logger from local and global registry."""
+    def remove(self, name: Union[str, logging.Logger]) -> None:
+        """Remove a logger from local and global registry, and close handler streams."""
         if isinstance(name, logging.Logger):
             name = name.name
 
@@ -181,11 +185,33 @@ class EpiLog:
         log: logging.Logger = self.loggers.pop(name)
 
         for handler in log.handlers:
-            handler.flush()
+            try:
+                handler.flush()
+            except UnsupportedOperation:
+                # NOTE: in the odd case where sys.stdin is used as the stream, which
+                #       cannot be flushed and raises an error. Read only streams do not
+                #       raise an error, as the implementation simply passes. Primarily
+                #       here for unit testing.
+                ...
+
             if id(handler) == id(self.stream):
                 continue
             handler.close()
+
+            # NOTE: StreamHandler does not actually close the stream to prevent closing
+            #       the default stderr stream.
+            if (
+                hasattr(handler, "stream")
+                and not handler.stream.closed
+                and handler.stream not in PROTECTED_STREAMS
+            ):
+                handler.stream.close()
+
         log.handlers.clear()
+
+    def dispatch(self, name: str) -> logging.Logger:
+        """Dispatch a new logger."""
+        return self.get_logger(name)
 
     def get_logger(self, name: str) -> logging.Logger:
         """Initialize a new logger."""
