@@ -49,7 +49,7 @@ class Units:
     """Container of Units.
 
     Args:
-        units (Unit): unit defintions
+        units (Unit): unit definitions
 
     """
 

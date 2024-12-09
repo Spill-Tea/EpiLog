@@ -1,6 +1,17 @@
 <!-- omit in toc -->
 # EpiLog
-Simple Logging Manager
+
+<p>
+<a href="https://github.com/Spill-Tea/EpiLog/actions/workflows/python-package.yml?query=branch%3Amain" target="_blank"><img src="https://github.com/Spill-Tea/EpiLog/actions/workflows/python-package.yml/badge.svg?branch=main"></a>
+<a href="https://github.com/Spill-Tea/EpiLog/blob/main/LICENSE" target="_blank"><img alt="MIT License" src="https://img.shields.io/github/license/Spill-Tea/EpiLog?style=flat-square&color=%235982b5"></a>
+<a href="https://github.com/Spill-Tea/EpiLog/releases/latest" target="_blank"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/Spill-Tea/EpiLog"></a>
+<a href="https://pypi.org/project/EpiLog/" target="_blank"><img src="https://badge.fury.io/py/EpiLog.svg?icon=si%3Apython" alt="PyPI version" height="20"></a>
+</p>
+
+Logging made simple.
+
+Dispatch multiple loggers identically formatted, and tear them
+down just as easily.
 
 <!-- omit in toc -->
 ## Table of Contents
