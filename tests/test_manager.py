@@ -1,9 +1,11 @@
 """Unit tests to examine the Expected Behavior of the EpiLog Logging Manager."""
 
+from __future__ import annotations
+
 import logging
 import sys
 from io import IOBase, StringIO
-from typing import Callable, Union
+from typing import Callable, Tuple, Union
 
 import pytest
 
@@ -14,7 +16,7 @@ from EpiLog.manager import defaultFormat
 @pytest.mark.parametrize("names", [("a", "b", "c"), ("b", "c", "d", "e")])
 @pytest.mark.parametrize("fn_name", ["get_logger", "dispatch"])
 def test_get_logger(
-    names: tuple[str],
+    names: Tuple[str],
     fn_name: str,
     build_manager: Callable[..., EpiLog],
 ) -> None:
