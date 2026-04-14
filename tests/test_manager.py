@@ -15,12 +15,6 @@ from EpiLog.manager import defaultFormat
 from .conftest import _assert_msg_in_output
 
 
-# def _assert_msg_in_output(stream: IOBase, msg: str) -> None:
-#     stream.seek(0)
-#     output: str = stream.read()
-#     assert msg in output, "Message not found in output stream after logging."
-
-
 @pytest.mark.parametrize("names", [("a", "b", "c"), ("b", "c", "d", "e")])
 @pytest.mark.parametrize("fn_name", ["get_logger", "dispatch"])
 def test_get_logger(
