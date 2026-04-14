@@ -62,6 +62,7 @@ exclude_also = ["def __repr__", 'if __name__ == "__main__"']
 
 [tool.mypy]
 mypy_path = "EpiLog"
+strict = true
 warn_unused_ignores = true
 allow_redefinition = false
 force_uppercase_builtins = true

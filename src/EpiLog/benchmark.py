@@ -26,7 +26,8 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from time import perf_counter_ns
-from typing import Dict, Iterator, Tuple, Union
+from types import TracebackType
+from typing import Dict, Iterator, Optional, Tuple, Union
 
 
 # Python < 3.11 support
@@ -58,17 +59,24 @@ class Units:
     Args:
         units (Unit): unit definitions
 
+    Raises:
+        ValueError: if modifier value of units is not defined.
+
     """
 
     units: Tuple[Unit, ...]
 
-    def __init__(self, *units: Unit):
+    def __init__(self, *units: Unit) -> None:
         self.units = units
         self._update()
 
-    def _update(self):
+    def _update(self) -> None:
         for n, current in enumerate(self.units[1:]):
             previous = self.units[n]
+            if previous.modifier is None:
+                raise ValueError(
+                    f"Modifier value of unit '{previous.unit}' cannot be None."
+                )
             current.base = previous.base * previous.modifier
 
     def __iter__(self) -> Iterator[Unit]:
@@ -158,10 +166,15 @@ class BenchMark:
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+    def __exit__(
+        self,
+        exc_type: Optional[type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
         end: int = perf_counter_ns()
 
-        if exc_type is not None:
+        if exc_type is not None and exc_val is not None:
             self.log.error("Traceback:", exc_info=(exc_type, exc_val, exc_tb))
             return
 
