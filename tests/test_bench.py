@@ -41,12 +41,6 @@ def test_empty_benchmark(construct: Tuple[StringIO, EpiLog]) -> None:
         assert b.enabled, "Expected Logging to be Enabled on Benchmark Class."
 
     _assert_msg_in_output(stream, expected)
-    # stream.seek(0)
-    # output = stream.read()
-
-    # assert msg in output, "Message not Found in output stream after logging."
-    # assert expected in output, "Message Format not found in Output Stream."
-    # assert "Traceback" not in output, "Error raised during use of context manager."
 
 
 def test_enabled(construct: Tuple[StringIO, EpiLog]) -> None:
