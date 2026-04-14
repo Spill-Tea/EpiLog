@@ -5,12 +5,20 @@ from __future__ import annotations
 import logging
 import sys
 from io import IOBase, StringIO
-from typing import Callable, Tuple, Union
+from typing import Callable, Optional, Tuple, Union
 
 import pytest
 
 from EpiLog import EpiLog
 from EpiLog.manager import defaultFormat
+
+from .conftest import _assert_msg_in_output
+
+
+# def _assert_msg_in_output(stream: IOBase, msg: str) -> None:
+#     stream.seek(0)
+#     output: str = stream.read()
+#     assert msg in output, "Message not found in output stream after logging."
 
 
 @pytest.mark.parametrize("names", [("a", "b", "c"), ("b", "c", "d", "e")])
@@ -23,7 +31,7 @@ def test_get_logger(
     """Tests that we correctly construct a named logger."""
     manager: EpiLog = build_manager()
     assert len(manager.loggers) == 0
-    function = getattr(manager, fn_name)
+    function: Callable[[str], logging.Logger] = getattr(manager, fn_name)
     for n in names:
         function(n)
     assert len(manager.loggers) == len(set(names))
@@ -39,12 +47,13 @@ def test_get_logger_name_caches(build_manager: Callable[..., EpiLog]) -> None:
     log_b: logging.Logger = manager.get_logger(name)
 
     assert id(log_a) == id(log_b), "Expected same object."
+    assert len(manager.loggers) == 1, "Expected a single key entry in logger registry."
 
 
 def test_logging(build_manager: Callable[..., EpiLog]) -> None:
     """Makes certain no errors are raised while logging."""
     manager: EpiLog = build_manager()
-    log = manager.get_logger("test")
+    log: logging.Logger = manager.get_logger("test")
     log.info("Bob boop beep")
 
 
@@ -54,15 +63,11 @@ def test_stream(build_manager: Callable[..., EpiLog]) -> None:
         handler = logging.StreamHandler(stream)
         manager: EpiLog = build_manager(stream=handler)
 
-        log = manager.get_logger("test")
-        message = "You are blind to reality and for that I am most proud"
+        log: logging.Logger = manager.get_logger("test")
+        message: str = "You are blind to reality and for that I am most proud"
         log.info(message)
 
-        stream.seek(0)
-        output = stream.read()
-        stream.close()
-
-        assert message in output, "Message not Found in output stream after logging"
+        _assert_msg_in_output(stream, message)
 
 
 def test_level_change(build_manager: Callable[..., EpiLog]) -> None:
@@ -73,24 +78,19 @@ def test_level_change(build_manager: Callable[..., EpiLog]) -> None:
         manager: EpiLog = build_manager(level=logging.INFO, stream=handler)
         log: logging.Logger = manager.get_logger("test")
 
-        message = (
+        message: str = (
             "I would say that he's blessedly unburdened with the complications of a"
             " university education."
         )
         log.debug(message)
-        stream.seek(0)
-        output = stream.read()
-        assert message not in output, "Message should not have been Received"
+        assert stream.tell() == 0, "Expected no output at current level."
+        with pytest.raises(AssertionError):
+            _assert_msg_in_output(stream, message)
 
         # Then repeat after Changing level
         manager.level = logging.DEBUG
         log.debug(message)
-
-        stream.seek(0)
-        output = stream.read()
-        stream.close()
-
-        assert message in output, "Message not Found in output stream after logging"
+        _assert_msg_in_output(stream, message)
 
 
 def test_format_change(build_manager: Callable[..., EpiLog]) -> None:
@@ -105,11 +105,7 @@ def test_format_change(build_manager: Callable[..., EpiLog]) -> None:
         message = "I have no idea why all of this is happening or how to control it."
         log.info(message)
 
-        stream.seek(0)
-        output = stream.read()
-        stream.close()
-
-        assert f"INFO | {message}\n" == output, "Expected Message format to match."
+        _assert_msg_in_output(stream, f"INFO | {message}\n")
 
 
 def test_stream_change(build_manager: Callable[..., EpiLog]) -> None:
@@ -123,44 +119,37 @@ def test_stream_change(build_manager: Callable[..., EpiLog]) -> None:
             stream=handler_a,
             formatter=logging.Formatter("%(levelname)s | %(message)s"),
         )
-        log = manager.get_logger("test")
+        log: logging.Logger = manager.get_logger("test")
 
         # Modify Stream
         manager.stream = handler_b
         assert manager.stream == handler_b, "Unexpected Stream."
 
-        message = (
+        message: str = (
             "You humans have so many emotions! You only need two: anger and confusion!"
         )
-        expected = f"INFO | {message}\n"
+        expected: str = f"INFO | {message}\n"
         log.info(message)
 
-        # Test first stream
-        stream_a.seek(0)
-        output_a = stream_a.read()
-        stream_a.close()
-        assert (
-            output_a != expected
-        ), "Did not Expect message to be written to previous stream."
+        # Test first stream (where we do not expect message output)
+        with pytest.raises(AssertionError):
+            _assert_msg_in_output(stream_a, message)
 
         # Test Second, Expected stream
-        stream_b.seek(0)
-        output_b = stream_b.read()
-        stream_b.close()
-        assert output_b == expected, "Expected message to be written to current stream."
+        _assert_msg_in_output(stream_b, expected)
 
 
 def test_stream_change_to_none(build_manager: Callable[..., EpiLog]) -> None:
     """Confirm that attempts to set the stream to none result in default stream."""
     manager: EpiLog = build_manager()
     assert manager.stream is not None, "Expected Default Stream to instantiate."
-    previous_id = id(manager.stream)
+    previous_id: int = id(manager.stream)
 
     manager.stream = None  # type: ignore[assignment]
     assert manager.stream is not None, "Expected Default Stream to kick in."
-    assert isinstance(
-        manager.stream, (logging.Handler, logging.Filterer)
-    ), "Unexpected stream type."
+    assert isinstance(manager.stream, (logging.Handler, logging.Filterer)), (
+        "Unexpected stream type."
+    )
 
     assert id(manager.stream) != previous_id, "Expected new stream instance."
 
@@ -172,7 +161,10 @@ def test_stream_change_to_none(build_manager: Callable[..., EpiLog]) -> None:
         logging.Formatter("%(name)s | %(levelname)s | %(message)s"),
     ],
 )
-def test_format_instantiation(f, build_manager: Callable[..., EpiLog]) -> None:
+def test_format_instantiation(
+    f: Optional[logging.Formatter],
+    build_manager: Callable[..., EpiLog],
+) -> None:
     """Tests expected behaviors when instantiating with Formatters."""
     manager: EpiLog = build_manager(formatter=f)
     if f is not None:
@@ -240,42 +232,42 @@ def test_handlers_error(build_manager: Callable[..., EpiLog]) -> None:
 def test_get_log_by_name(build_manager: Callable[..., EpiLog]) -> None:
     """Tests the special dunder method __get_item__ works as expected."""
     manager: EpiLog = build_manager()
-    name = "get_item"
+    name: str = "get_item"
     log: logging.Logger = manager.get_logger(name)
 
     assert manager[name] == log, "Expected to retrieve the same logger via get item."
 
 
 def _confirm_removal(cls: EpiLog, name: Union[str, logging.Logger]) -> None:
-    if isinstance(name, logging.Logger):
-        _name = name.name
-    else:
-        _name = name
-
+    _name: str = name.name if isinstance(name, logging.Logger) else name
     assert _name in cls.loggers, "Expected logger to be registered"
-    assert (
-        _name in logging.Logger.manager.loggerDict
-    ), "Expected logger to be in logging module registry"
+    assert _name in logging.Logger.manager.loggerDict, (
+        "Expected logger to be in logging module registry"
+    )
 
     cls.remove(name)
 
     assert _name not in cls.loggers, "Expected logger to be removed locally"
-    assert (
-        _name not in logging.Logger.manager.loggerDict
-    ), "Expected logger to be removed from logging module registry"
+    assert _name not in logging.Logger.manager.loggerDict, (
+        "Expected logger to be removed from logging module registry"
+    )
 
     # Confirm current stream is not closed
     if hasattr(cls.stream, "_closed"):
         # only available >=python3.10
-        assert not cls.stream._closed, "Expected current stream to remain open."
+        assert not cls.stream._closed, (  # pyright: ignore
+            "Expected current stream to remain open."
+        )
     if hasattr(cls.stream, "stream"):
-        assert not cls.stream.stream.closed, "Expected current stream to remain open."
+        assert not cls.stream.stream.closed, (  # pyright: ignore
+            "Expected current stream to remain open."
+        )
 
 
 def test_log_removal_by_name(build_manager: Callable[..., EpiLog]) -> None:
     """Test we can remove a logger by providing the name of the logger."""
     manager: EpiLog = build_manager()
-    name = "removal_by_name"
+    name: str = "removal_by_name"
     manager.get_logger(name)
     _confirm_removal(manager, name)
 
@@ -283,7 +275,7 @@ def test_log_removal_by_name(build_manager: Callable[..., EpiLog]) -> None:
 def test_log_removal_by_logger(build_manager: Callable[..., EpiLog]) -> None:
     """Test we can remove a logger by providing the logger itself."""
     manager: EpiLog = build_manager()
-    name = "removal_by_logger"
+    name: str = "removal_by_logger"
     log: logging.Logger = manager.get_logger(name)
     _confirm_removal(manager, log)
 
@@ -300,7 +292,9 @@ def _handle_second_removal(
     _confirm_removal(manager, log)
 
     if hasattr(second_handler, "_closed"):
-        assert second_handler._closed, "Expected additional Handler to be closed."
+        assert second_handler._closed, (  # pyright: ignore
+            "Expected additional Handler to be closed."
+        )
 
     return second_handler
 
@@ -310,13 +304,13 @@ def test_log_removal_with_additional_handler(
 ) -> None:
     """Test that additional handlers and their streams are closed on removal."""
     manager: EpiLog = build_manager()
-    name = "removal_by_logger"
+    name: str = "removal_by_logger"
     log: logging.Logger = manager.get_logger(name)
 
     with StringIO() as stream:
-        second_handler = _handle_second_removal(stream, log, manager)
+        second: logging.StreamHandler = _handle_second_removal(stream, log, manager)
         assert stream.closed, "Expected stream to be closed."
-        assert second_handler.stream.closed, "Expected stream to be closed."
+        assert second.stream.closed, "Expected stream to be closed."
 
 
 @pytest.mark.parametrize(
@@ -333,9 +327,9 @@ def test_log_removal_with_protected_streams(
 ) -> None:
     """Test additional handler is closed on removal, but sys streams remain open."""
     manager: EpiLog = build_manager()
-    name = "removal_by_logger"
+    name: str = "removal_by_logger"
     log: logging.Logger = manager.get_logger(name)
 
-    second_handler = _handle_second_removal(stream, log, manager)
+    second_handler: logging.StreamHandler = _handle_second_removal(stream, log, manager)
     assert not stream.closed, "Expected protected stream to remain open."
     assert not second_handler.stream.closed, "Expected protected stream to remain open."

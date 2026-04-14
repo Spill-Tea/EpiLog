@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from io import IOBase
 from typing import Callable, Generator, Optional
 
 import pytest
@@ -55,3 +56,9 @@ def build_manager() -> Generator[Callable[..., EpiLog], None, None]:
     # Required for Intentionally Failed Tests
     if instance is not None:
         teardown_epilogs(instance)
+
+
+def _assert_msg_in_output(stream: IOBase, msg: str) -> None:
+    stream.seek(0)
+    output: str = stream.read()
+    assert msg in output, "Message not found in output stream after logging."
