@@ -9,7 +9,7 @@ from typing import Callable, Dict, Generator, Tuple
 import pytest
 
 from EpiLog import EpiLog
-from EpiLog.benchmark import NS_UNITS, BenchMark, Units
+from EpiLog.benchmark import NS_UNITS, BenchMark, Unit, Units
 
 from .conftest import _assert_msg_in_output
 
@@ -81,6 +81,12 @@ def test_empty_convert_units() -> None:
 
     assert res == value, "Expected same value."
     assert u == "", "Expected empty unit string."
+
+
+def test_units_raises() -> None:
+    """Confirm instantiating units without modifier value raises ValueError."""
+    with pytest.raises(ValueError):
+        obj = Units(Unit("a"), Unit("b"))
 
 
 @pytest.mark.parametrize(
