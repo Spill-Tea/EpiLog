@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from io import StringIO
-from typing import Dict, Generator, Tuple
+from typing import Callable, Dict, Generator, Tuple
 
 import pytest
 
@@ -15,16 +15,17 @@ from .conftest import _assert_msg_in_output
 
 
 @pytest.fixture
-def construct(build_manager) -> Generator[Tuple[StringIO, EpiLog], None, None]:
+def construct(
+    build_manager: Callable[..., EpiLog],
+) -> Generator[Tuple[StringIO, EpiLog], None, None]:
     """Construct EpiLog Log Manager with standard Fixings."""
-    stream = StringIO()
-    handler = logging.StreamHandler(stream)
-    form = logging.Formatter("%(levelname)s | %(message)s")
-    manager = build_manager(stream=handler, formatter=form)
+    with StringIO() as stream:
+        handler = logging.StreamHandler(stream)
+        form = logging.Formatter("%(levelname)s | %(message)s")
+        manager: EpiLog = build_manager(stream=handler, formatter=form)
 
-    yield stream, manager
+        yield stream, manager
 
-    stream.close()
     assert stream.closed, "Expected Stream to be Closed."
 
 
@@ -72,7 +73,7 @@ def test_error(construct: Tuple[StringIO, EpiLog]) -> None:
     _assert_msg_in_output(stream, "ERROR")
 
 
-def test_empty_convert_units():
+def test_empty_convert_units() -> None:
     """Test branch point in Units class to calculate unit conversion method."""
     instance = Units()
     value: float = 1.2
@@ -96,7 +97,7 @@ def test_empty_convert_units():
         (604_800_000_000_000, (1.0, "weeks")),
     ],
 )
-def test_units_convert_units(value: int, expected: float):
+def test_units_convert_units(value: int, expected: float) -> None:
     """Test that we correctly convert units to largest relevant bin."""
     result: Tuple[float, str] = NS_UNITS.convert_units(value)
     assert result == expected, "Unexpected conversion."
