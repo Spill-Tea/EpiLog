@@ -29,6 +29,13 @@ from time import perf_counter_ns
 from typing import Dict, Iterator, Tuple, Union
 
 
+# Python < 3.11 support
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
+
+
 @dataclass
 class Unit:
     """Unit comparing string id to a modifier of the next unit.
@@ -145,7 +152,7 @@ class BenchMark:
         self.description = description
         self.t0 = 0
 
-    def __enter__(self) -> "BenchMark":
+    def __enter__(self) -> Self:
         if self.enabled:
             self.t0 = perf_counter_ns()
 
