@@ -4,25 +4,28 @@ from __future__ import annotations
 
 import logging
 from io import StringIO
-from typing import Generator, Tuple
+from typing import Callable, Dict, Generator, Tuple
 
 import pytest
 
 from EpiLog import EpiLog
 from EpiLog.benchmark import NS_UNITS, BenchMark, Units
 
+from .conftest import _assert_msg_in_output
+
 
 @pytest.fixture
-def construct(build_manager) -> Generator[Tuple[StringIO, EpiLog], None, None]:
+def construct(
+    build_manager: Callable[..., EpiLog],
+) -> Generator[Tuple[StringIO, EpiLog], None, None]:
     """Construct EpiLog Log Manager with standard Fixings."""
-    stream = StringIO()
-    handler = logging.StreamHandler(stream)
-    form = logging.Formatter("%(levelname)s | %(message)s")
-    manager = build_manager(stream=handler, formatter=form)
+    with StringIO() as stream:
+        handler = logging.StreamHandler(stream)
+        form = logging.Formatter("%(levelname)s | %(message)s")
+        manager: EpiLog = build_manager(stream=handler, formatter=form)
 
-    yield stream, manager
+        yield stream, manager
 
-    stream.close()
     assert stream.closed, "Expected Stream to be Closed."
 
 
@@ -31,19 +34,14 @@ def test_empty_benchmark(construct: Tuple[StringIO, EpiLog]) -> None:
     stream, manager = construct
     manager.level = logging.INFO
 
-    log = manager.get_logger("test")
-    msg = "I'm positively bedeviled with meetings et cetera"
-    expected = f"INFO | {msg}"
+    log: logging.Logger = manager.get_logger("test")
+    msg: str = "I'm positively bedeviled with meetings et cetera"
+    expected: str = f"INFO | {msg}"
 
     with BenchMark(log, msg) as b:
         assert b.enabled, "Expected Logging to be Enabled on Benchmark Class."
 
-    stream.seek(0)
-    output = stream.read()
-
-    assert msg in output, "Message not Found in output stream after logging."
-    assert expected in output, "Message Format not found in Output Stream."
-    assert "Traceback" not in output, "Error raised during use of context manager."
+    _assert_msg_in_output(stream, expected)
 
 
 def test_enabled(construct: Tuple[StringIO, EpiLog]) -> None:
@@ -51,35 +49,31 @@ def test_enabled(construct: Tuple[StringIO, EpiLog]) -> None:
     stream, manager = construct
     manager.level = logging.CRITICAL
 
-    log = manager.get_logger("disabled")
-    msg = "That's exactly the kind of paranoia that makes me weary of spending time "
-    msg += "with you."
+    log: logging.Logger = manager.get_logger("disabled")
+    msg: str = "That's exactly the kind of paranoia that makes me weary of spending"
+    msg += " time with you."
 
     with BenchMark(log, msg, logging.DEBUG) as b:
         assert not b.enabled, "Expected Logging to be Disabled on Benchmark Class."
 
-    stream.seek(0)
-    output = stream.read()
-    assert msg not in output, "Message Found in output stream after disabled Benchmark."
+    with pytest.raises(AssertionError):
+        _assert_msg_in_output(stream, msg)
 
 
 def test_error(construct: Tuple[StringIO, EpiLog]) -> None:
     """Test that an error message is emitted when one occurs during context."""
     stream, manager = construct
     manager.level = logging.DEBUG
-    log = manager.get_logger("errors")
+    log: logging.Logger = manager.get_logger("errors")
 
     with pytest.raises(AssertionError):
         with BenchMark(log, "msg", logging.DEBUG):
             assert False, "We are Intentionally raising an error"  # noqa: B011
 
-    stream.seek(0)
-    output = stream.read()
-    assert "ERROR" in output, "Expected Error Level Log Emitted"
-    assert "Traceback" in output, "Expected Log message to include traceback info."
+    _assert_msg_in_output(stream, "ERROR")
 
 
-def test_empty_convert_units():
+def test_empty_convert_units() -> None:
     """Test branch point in Units class to calculate unit conversion method."""
     instance = Units()
     value: float = 1.2
@@ -103,9 +97,9 @@ def test_empty_convert_units():
         (604_800_000_000_000, (1.0, "weeks")),
     ],
 )
-def test_units_convert_units(value: int, expected: float):
+def test_units_convert_units(value: int, expected: float) -> None:
     """Test that we correctly convert units to largest relevant bin."""
-    result = NS_UNITS.convert_units(value)
+    result: Tuple[float, str] = NS_UNITS.convert_units(value)
     assert result == expected, "Unexpected conversion."
 
 
@@ -122,7 +116,7 @@ def test_units_convert_units(value: int, expected: float):
 )
 def test_breakdown(value: int, expected: dict) -> None:
     """Test Breakdown of ns into appropriate time bins."""
-    result = NS_UNITS.breakdown_units(value)
+    result: Dict[str, int] = NS_UNITS.breakdown_units(value)
     container = dict((i.unit, 0) for i in NS_UNITS)
     container.update(expected)
 
